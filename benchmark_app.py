@@ -105,16 +105,17 @@ NEW_OUTFITS = {
 }
 
 BACKGROUND_OPTIONS = {
-    "Soft Neutral Grey":   "soft neutral grey",
-    "Pure White":          "pure white",
-    "Warm Light Beige":    "warm light beige",
-    "Light Sky Blue":      "light sky blue",
+    "Soft Neutral Grey": "soft neutral grey",
+    "Pure White": "pure white",
+    "Warm Light Beige": "warm light beige",
+    "Light Sky Blue": "light sky blue",
     "Pale Mint / Off-White": "pale mint off-white",
 }
 
 # ---------------------------------------------------------------------------
 # Prompt builders
 # ---------------------------------------------------------------------------
+
 
 def build_production_prompt(gender: str, outfit_style: str) -> str:
     common_intro = f"Generate a portrait of a professional {'male' if gender == 'male' else 'female'} "
@@ -137,7 +138,10 @@ def build_production_prompt(gender: str, outfit_style: str) -> str:
     return f"{common_intro} {outfit_style}.{common_features}{framing_fix}{neck_fix}{image_quality}"
 
 
-def build_experimental_prompt(gender: str, outfit_style: str, background_style: str = "soft neutral grey") -> str:
+def build_experimental_prompt(
+    gender: str, outfit_style: str, background_style: str = "soft neutral grey"
+) -> str:
+    """v1 — Photographer role + structured sections."""
     gender_label = "male" if gender == "male" else "female"
     return f"""You are a professional portrait photographer. Using the uploaded reference photo, generate a photorealistic headshot portrait with the following specifications:
 
@@ -172,22 +176,137 @@ PHOTOGRAPHY STYLE:
 OUTPUT: A single portrait image matching all specifications above."""
 
 
+def build_experimental_prompt_v2(
+    gender: str, outfit_style: str, background_style: str = "soft neutral grey"
+) -> str:
+    """v2 — Step-by-step identity anchoring with explicit metric targets (skin tone, sharpness, bg uniformity)."""
+    gender_label = "male" if gender == "male" else "female"
+    return f"""You are processing a real reference photograph to generate a professional corporate headshot. The face in the reference photo must appear EXACTLY in the output — this is identity-critical.
+
+STEP 1 — ANCHOR THE IDENTITY (highest priority):
+Study every detail of the face in the uploaded photo before generating:
+• Skin tone and undertone (warm / cool / neutral) — match precisely
+• Skin texture: pores, fine lines, any marks or freckles — do not smooth away
+• Eye color, shape, and spacing
+• Nose shape, lip shape, jawline, and cheekbone structure
+• Hair: exact color, texture, and current style as shown
+• Apparent age — do not de-age or age the person
+• Ethnicity and all distinguishing features
+
+This face must appear UNCHANGED in the output.
+
+STEP 2 — APPLY PROFESSIONAL STYLING:
+Subject: {gender_label} professional
+Attire: {outfit_style}
+
+STEP 3 — COMPOSITION:
+• Framing: crown of head to mid-chest, 5–10% headroom above the head
+• Face horizontally centered in frame
+• Upright posture, shoulders relaxed, confident neutral expression
+
+STEP 4 — CLOTHING & ANATOMY:
+• Clothing crisp, well-tailored, wrinkle-free
+• Collar sits flat against neck — no floating fabric, no gaps
+• Neck and shoulder anatomy natural and proportional
+
+STEP 5 — BACKGROUND:
+• {background_style} — completely uniform solid or very subtle gradient
+• Must be clean all the way to the image edges — no texture or environmental elements
+
+STEP 6 — LIGHTING & FOCUS:
+• Professional soft-box studio setup: key light at 45° upper-left, gentle fill from right
+• Even illumination across the face — no harsh chin or nose shadows
+• True-to-life color rendition — no warm or cool color cast
+• Face razor-sharp in focus; background may have slight depth-of-field softness
+• Ultra-photorealistic — indistinguishable from a real studio photograph
+
+OUTPUT: Single portrait image exactly matching the above specifications."""
+
+
+def build_experimental_prompt_v3(
+    gender: str, outfit_style: str, background_style: str = "soft neutral grey"
+) -> str:
+    """v3 — Directive brief with strict prohibitions and 3-point lighting specification."""
+    gender_label = "male" if gender == "male" else "female"
+    return f"""PROFESSIONAL HEADSHOT DIRECTIVE
+
+INPUT: Reference photograph of a real person
+OUTPUT: Professional {gender_label} corporate headshot
+
+━━━ IDENTITY — ZERO TOLERANCE FOR CHANGES ━━━
+The person in the generated image must be the EXACT SAME PERSON as in the reference photo.
+Treat the face as a locked, uneditable asset:
+→ Skin color and undertone: match exactly — same warmth, depth, and tone
+→ Skin texture: preserve all natural texture, pores, fine lines — no AI smoothing
+→ Facial geometry: same bone structure, proportions, and all features
+→ Eyes: same color, shape, spacing, and brow arch
+→ Hair: same color and style as shown
+→ Age: no de-aging or aging — keep the subject's natural age
+
+━━━ ATTIRE ━━━
+{outfit_style}
+Garment must be sharp, properly fitted, and wrinkle-free.
+Collar and neckline sit naturally against the neck — no gaps or floating fabric.
+Neck and shoulder anatomy anatomically correct and proportional.
+
+━━━ FRAMING & POSE ━━━
+• Head-to-mid-chest crop — full crown of head with small headroom margin
+• Face centered horizontally
+• Upright, professional posture — relaxed shoulders, no unnatural tilt
+
+━━━ BACKGROUND ━━━
+{background_style} — clean, uniform, professional studio backdrop
+Completely free of texture, objects, or environmental context.
+Background must be consistent from center to all four edges of the frame.
+
+━━━ LIGHTING ━━━
+3-point studio setup:
+  • Key light — upper-left at 45°, soft box diffused
+  • Fill light — right side, softer intensity to open shadows
+  • Rim / hair light — subtle, from behind, to separate subject from background
+Result: even, shadow-minimized illumination; true-to-life color; no blown highlights on skin.
+
+━━━ TECHNICAL OUTPUT ━━━
+• Photorealistic DSLR photograph — high resolution, no compression artifacts
+• 85mm portrait lens equivalent at f/2.2 — face tack-sharp, background subtly soft
+• No artistic filters, no painterly or HDR effects, no stylization
+
+━━━ STRICT PROHIBITIONS ━━━
+✗ Do NOT generate a different face — the subject must be recognizable as the reference person
+✗ Do NOT smooth, beautify, or retouch skin
+✗ Do NOT change skin tone, hair color, or eye color
+✗ Do NOT alter facial proportions or make the person look any different
+✗ Do NOT add accessories, props, or background elements not specified
+✗ Do NOT apply cinematic, HDR, or stylized color grading"""
+
+
 # ---------------------------------------------------------------------------
 # API helpers
 # ---------------------------------------------------------------------------
 
-def call_gemini_api(api_key: str, image_b64: str, prompt: str, mime_type: str = "image/jpeg"):
+
+def call_gemini_api(
+    api_key: str, image_b64: str, prompt: str, mime_type: str = "image/jpeg",
+    url: str = GEMINI_URL,
+):
     try:
         response = requests.post(
-            f"{GEMINI_URL}?key={api_key}",
+            f"{url}?key={api_key}",
             headers={"Content-Type": "application/json"},
             json={
-                "contents": [{
-                    "parts": [
-                        {"text": prompt},
-                        {"inline_data": {"mime_type": mime_type, "data": image_b64}},
-                    ]
-                }],
+                "contents": [
+                    {
+                        "parts": [
+                            {"text": prompt},
+                            {
+                                "inline_data": {
+                                    "mime_type": mime_type,
+                                    "data": image_b64,
+                                }
+                            },
+                        ]
+                    }
+                ],
             },
             timeout=180,
         )
@@ -238,9 +357,13 @@ def render_result(label: str, response, key_suffix: str):
     if img_b64:
         img = b64_to_pil(img_b64)
         st.image(img, use_container_width=True)
-        st.download_button("⬇️ Download PNG", pil_to_bytes(img),
-                           file_name=f"{key_suffix}_result.png", mime="image/png",
-                           key=f"dl_{key_suffix}")
+        st.download_button(
+            "⬇️ Download PNG",
+            pil_to_bytes(img),
+            file_name=f"{key_suffix}_result.png",
+            mime="image/png",
+            key=f"dl_{key_suffix}",
+        )
         return img
     else:
         st.warning("Response received but contained no image data.")
@@ -252,6 +375,7 @@ def render_result(label: str, response, key_suffix: str):
 # ---------------------------------------------------------------------------
 # Benchmark visualization helpers
 # ---------------------------------------------------------------------------
+
 
 def _score_color(score: float) -> str:
     if score >= 75:
@@ -284,17 +408,29 @@ def render_score_cards(prod_m: dict, exp_m: dict):
 def render_radar_chart(prod_m: dict, exp_m: dict) -> go.Figure:
     cats = bm.RADAR_METRICS + [bm.RADAR_METRICS[0]]  # close the polygon
     prod_vals = [prod_m.get(c, 0) for c in cats]
-    exp_vals  = [exp_m.get(c, 0) for c in cats]
+    exp_vals = [exp_m.get(c, 0) for c in cats]
 
     fig = go.Figure()
-    fig.add_trace(go.Scatterpolar(
-        r=prod_vals, theta=cats, fill="toself",
-        name="Production", line_color="#2563EB", fillcolor="rgba(37,99,235,0.15)",
-    ))
-    fig.add_trace(go.Scatterpolar(
-        r=exp_vals, theta=cats, fill="toself",
-        name="Experimental", line_color="#16A34A", fillcolor="rgba(22,163,74,0.15)",
-    ))
+    fig.add_trace(
+        go.Scatterpolar(
+            r=prod_vals,
+            theta=cats,
+            fill="toself",
+            name="Production",
+            line_color="#2563EB",
+            fillcolor="rgba(37,99,235,0.15)",
+        )
+    )
+    fig.add_trace(
+        go.Scatterpolar(
+            r=exp_vals,
+            theta=cats,
+            fill="toself",
+            name="Experimental",
+            line_color="#16A34A",
+            fillcolor="rgba(22,163,74,0.15)",
+        )
+    )
     fig.update_layout(
         polar=dict(radialaxis=dict(visible=True, range=[0, 100])),
         showlegend=True,
@@ -307,13 +443,19 @@ def render_radar_chart(prod_m: dict, exp_m: dict) -> go.Figure:
 
 def render_bar_chart(prod_m: dict, exp_m: dict) -> go.Figure:
     keys = bm.RADAR_METRICS + ["Sharpness"]
-    df = pd.DataFrame({
-        "Metric": keys * 2,
-        "Score": [prod_m.get(k, 0) for k in keys] + [exp_m.get(k, 0) for k in keys],
-        "Prompt": ["Production"] * len(keys) + ["Experimental"] * len(keys),
-    })
+    df = pd.DataFrame(
+        {
+            "Metric": keys * 2,
+            "Score": [prod_m.get(k, 0) for k in keys] + [exp_m.get(k, 0) for k in keys],
+            "Prompt": ["Production"] * len(keys) + ["Experimental"] * len(keys),
+        }
+    )
     fig = px.bar(
-        df, x="Metric", y="Score", color="Prompt", barmode="group",
+        df,
+        x="Metric",
+        y="Score",
+        color="Prompt",
+        barmode="group",
         color_discrete_map={"Production": "#2563EB", "Experimental": "#16A34A"},
         range_y=[0, 105],
         title="Score Comparison per Metric",
@@ -327,15 +469,17 @@ def render_bar_chart(prod_m: dict, exp_m: dict) -> go.Figure:
 def render_qualitative_section(key_prefix: str) -> dict:
     """Render star-rating sliders for qualitative assessment, return dict of ratings."""
     criteria = {
-        "Face Resemblance":  "Does the face look exactly like the person in the reference photo?",
+        "Face Resemblance": "Does the face look exactly like the person in the reference photo?",
         "Professional Look": "Does the overall image look like a professional headshot?",
-        "Clothing Quality":  "Does the clothing look natural, well-fitted, and realistic?",
-        "Background Quality":"Is the background clean, solid, and professional?",
-        "Overall Preference":"Overall, how satisfied are you with this image?",
+        "Clothing Quality": "Does the clothing look natural, well-fitted, and realistic?",
+        "Background Quality": "Is the background clean, solid, and professional?",
+        "Overall Preference": "Overall, how satisfied are you with this image?",
     }
     ratings = {}
     for label, help_text in criteria.items():
-        ratings[label] = st.slider(label, 1, 5, 3, help=help_text, key=f"{key_prefix}_{label}")
+        ratings[label] = st.slider(
+            label, 1, 5, 3, help=help_text, key=f"{key_prefix}_{label}"
+        )
     return ratings
 
 
@@ -347,18 +491,46 @@ for _k in ("ref_img", "prod_img", "exp_img", "prod_metrics", "exp_metrics"):
     if _k not in st.session_state:
         st.session_state[_k] = None
 
+if "prompt_fingerprint" not in st.session_state:
+    st.session_state["prompt_fingerprint"] = ""
+
 # ---------------------------------------------------------------------------
 # Main app
 # ---------------------------------------------------------------------------
 
+
 def main():
     st.title("📸 AI Profile Generator — Prompt Benchmarking")
-    st.caption("Upload a headshot, pick a look, generate with both prompts, then compare quantitative + qualitative results.")
+    st.caption(
+        "Upload a headshot, pick a look, generate with both prompts, then compare quantitative + qualitative results."
+    )
 
     # ---- Sidebar ----
     with st.sidebar:
         st.header("⚙️ Configuration")
-        api_key = st.text_input("Gemini API Key", type="password", placeholder="AIza...")
+        api_key = st.text_input(
+            "Gemini API Key", type="password", placeholder="AIza..."
+        )
+
+        _MODEL_OPTIONS = {
+            "gemini-2.5-flash-image": "gemini-2.5-flash-image",
+            "gemini-2.0-flash-exp-image-generation": "gemini-2.0-flash-exp-image-generation",
+            "Custom model…": "__custom__",
+        }
+        model_choice = st.selectbox(
+            "Gemini Model",
+            list(_MODEL_OPTIONS.keys()),
+            help="Both prompts use the same model. Switch here to test across model versions.",
+        )
+        if _MODEL_OPTIONS[model_choice] == "__custom__":
+            model_name = st.text_input("Model ID", placeholder="gemini-…")
+        else:
+            model_name = _MODEL_OPTIONS[model_choice]
+        gemini_url = (
+            f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent"
+            if model_name else GEMINI_URL
+        )
+        st.caption(f"`…/models/{model_name}:generateContent`")
 
         st.divider()
         st.header("👤 Subject")
@@ -370,43 +542,63 @@ def main():
 
         if gender == "male":
             suit_colors = {
-                "Black": "black", "Navy Blue": "navy blue", "Charcoal Grey": "charcoal grey",
-                "Dark Grey": "dark grey", "Burgundy / Wine": "burgundy",
-                "Forest Green": "forest green", "Steel Blue": "steel blue",
-                "Dark Brown": "dark brown", "Deep Teal": "deep teal", "Dark Plum": "dark plum",
+                "Black": "black",
+                "Navy Blue": "navy blue",
+                "Charcoal Grey": "charcoal grey",
+                "Dark Grey": "dark grey",
+                "Burgundy / Wine": "burgundy",
+                "Forest Green": "forest green",
+                "Steel Blue": "steel blue",
+                "Dark Brown": "dark brown",
+                "Deep Teal": "deep teal",
+                "Dark Plum": "dark plum",
             }
             shirt_colors = {
-                "White": "white", "Light Blue": "light blue",
-                "Light Grey": "light grey", "Cream": "cream",
+                "White": "white",
+                "Light Blue": "light blue",
+                "Light Grey": "light grey",
+                "Cream": "cream",
             }
             tie_options = {
-                "Black": "a black tie", "Navy": "a navy tie",
-                "Dark Red / Burgundy": "a dark red tie", "Silver": "a silver tie",
-                "Dark Blue": "a dark blue tie", "Charcoal": "a charcoal tie",
+                "Black": "a black tie",
+                "Navy": "a navy tie",
+                "Dark Red / Burgundy": "a dark red tie",
+                "Silver": "a silver tie",
+                "Dark Blue": "a dark blue tie",
+                "Charcoal": "a charcoal tie",
                 "No Tie (Open Collar)": None,
             }
-            suit_color  = st.selectbox("Suit / Blazer Color", list(suit_colors.keys()))
+            suit_color = st.selectbox("Suit / Blazer Color", list(suit_colors.keys()))
             shirt_color = st.selectbox("Shirt Color", list(shirt_colors.keys()))
-            tie_choice  = st.selectbox("Tie", list(tie_options.keys()))
-            pocket_sq   = st.checkbox("White Pocket Square")
+            tie_choice = st.selectbox("Tie", list(tie_options.keys()))
+            pocket_sq = st.checkbox("White Pocket Square")
 
-            tie_val  = tie_options[tie_choice]
+            tie_val = tie_options[tie_choice]
             tie_text = f"and {tie_val}" if tie_val else "with open collar, no tie"
-            ps_text  = " with a white pocket square" if pocket_sq else ""
+            ps_text = " with a white pocket square" if pocket_sq else ""
             custom_outfit = (
                 f"wearing a tailored {suit_colors[suit_color]} suit jacket"
                 f" over a {shirt_colors[shirt_color]} shirt {tie_text}{ps_text}"
             )
         else:
             blazer_colors = {
-                "Black": "black", "Navy Blue": "navy blue", "Charcoal Grey": "charcoal grey",
-                "Dark Grey": "dark grey", "Burgundy / Wine": "burgundy",
-                "Forest Green": "forest green", "Cobalt Blue": "cobalt blue",
-                "Emerald Green": "emerald green", "Camel / Tan": "camel", "White / Ivory": "white",
+                "Black": "black",
+                "Navy Blue": "navy blue",
+                "Charcoal Grey": "charcoal grey",
+                "Dark Grey": "dark grey",
+                "Burgundy / Wine": "burgundy",
+                "Forest Green": "forest green",
+                "Cobalt Blue": "cobalt blue",
+                "Emerald Green": "emerald green",
+                "Camel / Tan": "camel",
+                "White / Ivory": "white",
             }
             blouse_colors = {
-                "White": "white", "Light Blue": "light blue",
-                "Light Grey": "light grey", "Cream": "cream", "Soft Pink": "soft pink",
+                "White": "white",
+                "Light Blue": "light blue",
+                "Light Grey": "light grey",
+                "Cream": "cream",
+                "Soft Pink": "soft pink",
             }
             jewelry_options = {
                 "None": "",
@@ -425,12 +617,16 @@ def main():
                 "Silk Scarf (Burgundy)": "a silk neck scarf in burgundy loosely tied",
             }
             blazer_color = st.selectbox("Blazer Color", list(blazer_colors.keys()))
-            blouse_color = st.selectbox("Blouse / Top Color", list(blouse_colors.keys()))
+            blouse_color = st.selectbox(
+                "Blouse / Top Color", list(blouse_colors.keys())
+            )
             jewelry = st.selectbox("Jewelry", list(jewelry_options.keys()))
-            scarf   = st.selectbox("Scarf", list(scarf_options.keys()))
-            brooch  = st.checkbox("Gold Lapel Pin / Brooch")
+            scarf = st.selectbox("Scarf", list(scarf_options.keys()))
+            brooch = st.checkbox("Gold Lapel Pin / Brooch")
 
-            accessories = [x for x in [jewelry_options[jewelry], scarf_options[scarf]] if x]
+            accessories = [
+                x for x in [jewelry_options[jewelry], scarf_options[scarf]] if x
+            ]
             if brooch:
                 accessories.append("a subtle gold lapel pin on the blazer")
             custom_outfit = (
@@ -447,38 +643,107 @@ def main():
 
         st.divider()
         st.header("🧪 Experimental Prompt Source")
-        exp_mode = st.radio("Mode", ["Production Outfits", "New Outfit Presets", "Fully Custom"])
+        exp_version = st.radio(
+            "Prompt Version",
+            [
+                "v1 — Photographer Role",
+                "v2 — Step-by-Step Identity",
+                "v3 — Directive + Prohibitions",
+            ],
+            help=(
+                "v1: Photographer role prompt with structured sections (baseline experimental).\n"
+                "v2: Step-by-step identity anchoring — targets skin tone, sharpness, and bg uniformity metrics.\n"
+                "v3: Directive brief with 3-point lighting spec and explicit ✗ prohibitions."
+            ),
+        )
+        exp_version_key = {
+            "v1 — Photographer Role": 1,
+            "v2 — Step-by-Step Identity": 2,
+            "v3 — Directive + Prohibitions": 3,
+        }[exp_version]
+        exp_mode = st.radio(
+            "Outfit Source",
+            ["Production Outfits", "New Outfit Presets", "Fully Custom"],
+        )
 
         if exp_mode == "Production Outfits":
             experimental_outfit = st.selectbox("Outfit", PRODUCTION_OUTFITS[gender])
         elif exp_mode == "New Outfit Presets":
             experimental_outfit = st.selectbox("New Outfit", NEW_OUTFITS[gender])
         else:
-            experimental_outfit = st.text_area("Custom Outfit Description", value=custom_outfit, height=100)
+            experimental_outfit = st.text_area(
+                "Custom Outfit Description", value=custom_outfit, height=100
+            )
 
     # ---- Upload ----
     col_up, col_prev = st.columns([2, 1])
     with col_up:
         st.subheader("📁 Reference Image")
-        uploaded_file = st.file_uploader("Upload a front-facing headshot", type=["jpg", "jpeg", "png", "webp"])
+        uploaded_file = st.file_uploader(
+            "Upload a front-facing headshot", type=["jpg", "jpeg", "png", "webp"]
+        )
     with col_prev:
         if uploaded_file:
             ref_img = Image.open(uploaded_file)
             st.image(ref_img, caption="Input", use_container_width=True)
             st.session_state.ref_img = ref_img
 
-    # Build prompts
-    prod_prompt = build_production_prompt(gender, custom_outfit)
-    exp_prompt  = build_experimental_prompt(gender, experimental_outfit, background_style)
+    # ---------------------------------------------------------------------------
+    # Prompt editor
+    # ---------------------------------------------------------------------------
+    _exp_builders = {
+        1: build_experimental_prompt,
+        2: build_experimental_prompt_v2,
+        3: build_experimental_prompt_v3,
+    }
+    default_prod = build_production_prompt(gender, custom_outfit)
+    default_exp  = _exp_builders[exp_version_key](gender, experimental_outfit, background_style)
 
-    with st.expander("📋 View / inspect prompts"):
-        pc1, pc2 = st.columns(2)
-        with pc1:
-            st.markdown("**Production Prompt**")
-            st.text_area("Production prompt text", prod_prompt, height=220, key="prod_view", disabled=True, label_visibility="collapsed")
-        with pc2:
-            st.markdown("**Experimental Prompt**")
-            st.text_area("Experimental prompt text", exp_prompt, height=220, key="exp_view", disabled=True, label_visibility="collapsed")
+    # Auto-reload editors whenever version / outfit / background changes
+    fingerprint = f"{gender}|{custom_outfit}|{experimental_outfit}|{background_style}|{exp_version_key}"
+    if st.session_state["prompt_fingerprint"] != fingerprint:
+        st.session_state["editor_prod"] = default_prod
+        st.session_state["editor_exp"]  = default_exp
+        st.session_state["prompt_fingerprint"] = fingerprint
+
+    st.subheader("📝 Edit Prompts")
+    st.caption(
+        "Prompts are loaded from your sidebar selections. "
+        "Edit either text area freely — your exact text is what gets sent to Gemini on generation."
+    )
+
+    ec1, ec2 = st.columns(2)
+    with ec1:
+        h1, b1 = st.columns([4, 1])
+        with h1:
+            st.markdown("**🏭 Production Prompt**")
+        with b1:
+            if st.button("↺ Reset", key="reset_prod", use_container_width=True, help="Restore to default production prompt"):
+                st.session_state["editor_prod"] = default_prod
+                st.rerun()
+        prod_prompt = st.text_area(
+            "prod_editor",
+            key="editor_prod",
+            height=360,
+            label_visibility="collapsed",
+        )
+        st.caption(f"{len(prod_prompt):,} chars · {len(prod_prompt.split())} words")
+
+    with ec2:
+        h2, b2 = st.columns([4, 1])
+        with h2:
+            st.markdown(f"**🧪 Experimental — {exp_version}**")
+        with b2:
+            if st.button("↺ Reset", key="reset_exp", use_container_width=True, help="Restore to selected version preset"):
+                st.session_state["editor_exp"] = default_exp
+                st.rerun()
+        exp_prompt = st.text_area(
+            "exp_editor",
+            key="editor_exp",
+            height=360,
+            label_visibility="collapsed",
+        )
+        st.caption(f"{len(exp_prompt):,} chars · {len(exp_prompt.split())} words")
 
     st.divider()
 
@@ -494,9 +759,14 @@ def main():
 
     if gen_btn:
         img_bytes = uploaded_file.getvalue()
-        img_b64   = base64.b64encode(img_bytes).decode()
-        ext  = uploaded_file.name.rsplit(".", 1)[-1].lower()
-        mime = {"jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png", "webp": "image/webp"}.get(ext, "image/jpeg")
+        img_b64 = base64.b64encode(img_bytes).decode()
+        ext = uploaded_file.name.rsplit(".", 1)[-1].lower()
+        mime = {
+            "jpg": "image/jpeg",
+            "jpeg": "image/jpeg",
+            "png": "image/png",
+            "webp": "image/webp",
+        }.get(ext, "image/jpeg")
 
         st.subheader("🔬 Side-by-Side Comparison")
         status = st.status("Generating both images in parallel…", expanded=True)
@@ -504,10 +774,10 @@ def main():
             st.write("Calling Gemini — Production prompt…")
             st.write("Calling Gemini — Experimental prompt…")
             with ThreadPoolExecutor(max_workers=2) as ex:
-                pf = ex.submit(call_gemini_api, api_key, img_b64, prod_prompt, mime)
-                ef = ex.submit(call_gemini_api, api_key, img_b64, exp_prompt, mime)
+                pf = ex.submit(call_gemini_api, api_key, img_b64, prod_prompt, mime, gemini_url)
+                ef = ex.submit(call_gemini_api, api_key, img_b64, exp_prompt, mime, gemini_url)
                 prod_resp = pf.result()
-                exp_resp  = ef.result()
+                exp_resp = ef.result()
             status.update(label="Generation complete", state="complete")
 
         r1, r2 = st.columns(2)
@@ -515,18 +785,22 @@ def main():
             prod_img = render_result("🏭 Production Prompt", prod_resp, "production")
             st.session_state.prod_img = prod_img
         with r2:
-            exp_img = render_result("🧪 Experimental Prompt", exp_resp, "experimental")
+            exp_img = render_result(f"🧪 Experimental — {exp_version}", exp_resp, "experimental")
             st.session_state.exp_img = exp_img
 
         # Auto-compute metrics if both images generated
         if prod_img and exp_img and st.session_state.ref_img:
             with st.spinner("Computing benchmark metrics…"):
-                st.session_state.prod_metrics = bm.compute_all(st.session_state.ref_img, prod_img)
-                st.session_state.exp_metrics  = bm.compute_all(st.session_state.ref_img, exp_img)
+                st.session_state.prod_metrics = bm.compute_all(
+                    st.session_state.ref_img, prod_img
+                )
+                st.session_state.exp_metrics = bm.compute_all(
+                    st.session_state.ref_img, exp_img
+                )
 
     # ---- Benchmark Results ----
     prod_m = st.session_state.prod_metrics
-    exp_m  = st.session_state.exp_metrics
+    exp_m = st.session_state.exp_metrics
 
     if prod_m and exp_m:
         st.divider()
@@ -535,7 +809,7 @@ def main():
         # ---- Overall verdict ----
         p_overall = prod_m["Overall"]
         e_overall = exp_m["Overall"]
-        diff      = e_overall - p_overall
+        diff = e_overall - p_overall
         if abs(diff) < 2:
             verdict = "⚖️ **Tie** — both prompts score within 2 points of each other."
         elif diff > 0:
@@ -548,11 +822,17 @@ def main():
 
         ov1, ov2 = st.columns(2)
         with ov1:
-            st.metric("🏭 Production Overall", f"{p_overall:.1f} / 100",
-                      delta=f"{p_overall - e_overall:+.1f} vs Experimental")
+            st.metric(
+                "🏭 Production Overall",
+                f"{p_overall:.1f} / 100",
+                delta=f"{p_overall - e_overall:+.1f} vs Experimental",
+            )
         with ov2:
-            st.metric("🧪 Experimental Overall", f"{e_overall:.1f} / 100",
-                      delta=f"{e_overall - p_overall:+.1f} vs Production")
+            st.metric(
+                "🧪 Experimental Overall",
+                f"{e_overall:.1f} / 100",
+                delta=f"{e_overall - p_overall:+.1f} vs Production",
+            )
 
         st.divider()
 
@@ -581,14 +861,16 @@ def main():
                 p = prod_m[k]
                 e = exp_m[k]
                 winner = "🏭 Prod" if p >= e else "🧪 Exp"
-                table_data.append({
-                    "Metric": k,
-                    "Description": bm.METRIC_DESCRIPTIONS.get(k, ""),
-                    "Production": p,
-                    "Experimental": e,
-                    "Δ (Exp−Prod)": round(e - p, 1),
-                    "Winner": winner,
-                })
+                table_data.append(
+                    {
+                        "Metric": k,
+                        "Description": bm.METRIC_DESCRIPTIONS.get(k, ""),
+                        "Production": p,
+                        "Experimental": e,
+                        "Δ (Exp−Prod)": round(e - p, 1),
+                        "Winner": winner,
+                    }
+                )
             df = pd.DataFrame(table_data)
 
             def _score_bg(val):
@@ -598,7 +880,7 @@ def main():
                     return "background-color: #bbf7d0; color: #14532d"  # green
                 if val >= 50:
                     return "background-color: #fef08a; color: #713f12"  # yellow
-                return "background-color: #fecaca; color: #7f1d1d"      # red
+                return "background-color: #fecaca; color: #7f1d1d"  # red
 
             def _delta_bg(val):
                 if not isinstance(val, (int, float)):
@@ -609,10 +891,8 @@ def main():
                     return "color: #dc2626; font-weight: bold"
                 return "color: #6b7280"
 
-            styled = (
-                df.style
-                .map(_score_bg, subset=["Production", "Experimental"])
-                .map(_delta_bg, subset=["Δ (Exp−Prod)"])
+            styled = df.style.map(_score_bg, subset=["Production", "Experimental"]).map(
+                _delta_bg, subset=["Δ (Exp−Prod)"]
             )
             st.dataframe(styled, use_container_width=True, hide_index=True)
 
@@ -620,7 +900,9 @@ def main():
 
         # ---- Qualitative ratings ----
         st.subheader("⭐ Qualitative Ratings  (your human judgment)")
-        st.caption("Rate each image on the criteria below (1 = poor, 5 = excellent). Scores are combined with the quantitative results.")
+        st.caption(
+            "Rate each image on the criteria below (1 = poor, 5 = excellent). Scores are combined with the quantitative results."
+        )
 
         qc1, qc2 = st.columns(2)
         with qc1:
@@ -632,22 +914,28 @@ def main():
 
         if st.button("📝 Calculate Qualitative Score", use_container_width=True):
             prod_qual = sum(prod_ratings.values()) / len(prod_ratings) * 20  # 0-100
-            exp_qual  = sum(exp_ratings.values()) / len(exp_ratings) * 20
+            exp_qual = sum(exp_ratings.values()) / len(exp_ratings) * 20
 
             st.divider()
             st.subheader("🏆 Final Combined Score")
 
             # Combined = 60% quantitative + 40% qualitative
             prod_final = 0.60 * p_overall + 0.40 * prod_qual
-            exp_final  = 0.60 * e_overall + 0.40 * exp_qual
+            exp_final = 0.60 * e_overall + 0.40 * exp_qual
 
             fc1, fc2 = st.columns(2)
             with fc1:
-                st.metric("🏭 Production Final", f"{prod_final:.1f} / 100",
-                          help="60% quantitative + 40% qualitative")
+                st.metric(
+                    "🏭 Production Final",
+                    f"{prod_final:.1f} / 100",
+                    help="60% quantitative + 40% qualitative",
+                )
             with fc2:
-                st.metric("🧪 Experimental Final", f"{exp_final:.1f} / 100",
-                          help="60% quantitative + 40% qualitative")
+                st.metric(
+                    "🧪 Experimental Final",
+                    f"{exp_final:.1f} / 100",
+                    help="60% quantitative + 40% qualitative",
+                )
 
             final_diff = exp_final - prod_final
             if abs(final_diff) < 2:
@@ -660,15 +948,30 @@ def main():
             st.success(final_verdict)
 
             # Breakdown bar
-            breakdown = pd.DataFrame({
-                "Component": ["Quantitative", "Qualitative", "Final"] * 2,
-                "Score": [p_overall, prod_qual, prod_final, e_overall, exp_qual, exp_final],
-                "Prompt": ["Production"] * 3 + ["Experimental"] * 3,
-            })
+            breakdown = pd.DataFrame(
+                {
+                    "Component": ["Quantitative", "Qualitative", "Final"] * 2,
+                    "Score": [
+                        p_overall,
+                        prod_qual,
+                        prod_final,
+                        e_overall,
+                        exp_qual,
+                        exp_final,
+                    ],
+                    "Prompt": ["Production"] * 3 + ["Experimental"] * 3,
+                }
+            )
             fig_final = px.bar(
-                breakdown, x="Component", y="Score", color="Prompt", barmode="group",
+                breakdown,
+                x="Component",
+                y="Score",
+                color="Prompt",
+                barmode="group",
                 color_discrete_map={"Production": "#2563EB", "Experimental": "#16A34A"},
-                range_y=[0, 105], title="Final Score Breakdown", height=350,
+                range_y=[0, 105],
+                title="Final Score Breakdown",
+                height=350,
             )
             st.plotly_chart(fig_final, use_container_width=True)
 
