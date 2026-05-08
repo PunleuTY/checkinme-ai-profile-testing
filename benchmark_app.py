@@ -494,6 +494,10 @@ for _k in ("ref_img", "prod_img", "exp_img", "prod_metrics", "exp_metrics"):
 if "prompt_fingerprint" not in st.session_state:
     st.session_state["prompt_fingerprint"] = ""
 
+for _k in ("fetched_models", "fetch_error"):
+    if _k not in st.session_state:
+        st.session_state[_k] = None
+
 # ---------------------------------------------------------------------------
 # Main app
 # ---------------------------------------------------------------------------
@@ -512,20 +516,122 @@ def main():
             "Gemini API Key", type="password", placeholder="AIza..."
         )
 
-        _MODEL_OPTIONS = {
-            "gemini-2.5-flash-image": "gemini-2.5-flash-image",
-            "gemini-2.0-flash-exp-image-generation": "gemini-2.0-flash-exp-image-generation",
-            "Custom model…": "__custom__",
-        }
-        model_choice = st.selectbox(
-            "Gemini Model",
-            list(_MODEL_OPTIONS.keys()),
-            help="Both prompts use the same model. Switch here to test across model versions.",
-        )
-        if _MODEL_OPTIONS[model_choice] == "__custom__":
+        # ---- Model selector with live fetch ----
+        st.markdown("**Gemini Model**")
+        _mhdr, _mbtn = st.columns([3, 1])
+        with _mhdr:
+            st.caption("Preset list or fetch all models for your key.")
+        with _mbtn:
+            _fetch_clicked = st.button(
+                "🔍 Fetch",
+                key="fetch_models_btn",
+                disabled=not api_key,
+                use_container_width=True,
+                help="Call the Gemini models API and list every model your key can access.",
+            )
+
+        if _fetch_clicked and api_key:
+            with st.spinner("Fetching models from Gemini API…"):
+                try:
+                    _r = requests.get(
+                        "https://generativelanguage.googleapis.com/v1beta/models",
+                        params={"key": api_key},
+                        timeout=12,
+                    )
+                    if _r.status_code == 200:
+                        _all = _r.json().get("models", [])
+                        # Keep only models that support generateContent
+                        st.session_state["fetched_models"] = [
+                            m for m in _all
+                            if "generateContent" in m.get("supportedGenerationMethods", [])
+                        ]
+                        st.session_state["fetch_error"] = None
+                    else:
+                        _err = _r.json().get("error", {})
+                        st.session_state["fetch_error"] = (
+                            f"HTTP {_r.status_code} — "
+                            f"{_err.get('message', _r.text[:160])}"
+                        )
+                        st.session_state["fetched_models"] = None
+                except Exception as _exc:
+                    st.session_state["fetch_error"] = str(_exc)
+                    st.session_state["fetched_models"] = None
+
+        if st.session_state["fetch_error"]:
+            st.error(st.session_state["fetch_error"])
+
+        _fetched = st.session_state["fetched_models"]
+
+        if _fetched is not None:
+            # -- Filter toggle --
+            _img_only = st.toggle(
+                "Image generation models only",
+                value=True,
+                help="Filters to models whose name contains 'image' — the subset that "
+                     "can output generated images rather than just text.",
+            )
+            _visible = (
+                [m for m in _fetched if "image" in m["name"].lower()]
+                if _img_only else _fetched
+            )
+            if not _visible:          # filter too aggressive — show all
+                _visible = _fetched
+                st.caption("No image models found — showing all generateContent models.")
+            else:
+                st.caption(
+                    f"{'🖼 ' if _img_only else ''}"
+                    f"{len(_visible)} model{'s' if len(_visible) != 1 else ''} found."
+                )
+
+            def _model_label(m):
+                mid   = m["name"].split("/")[-1]
+                dname = m.get("displayName", "")
+                return f"{dname}  ({mid})" if dname else mid
+
+            _label_to_id = {_model_label(m): m["name"].split("/")[-1] for m in _visible}
+            _label_to_id["Custom model…"] = "__custom__"
+            _labels = list(_label_to_id.keys())
+
+            _sel_label = st.selectbox(
+                "model_dynamic", _labels,
+                label_visibility="collapsed",
+                key="model_select_dynamic",
+            )
+            _chosen_id = _label_to_id[_sel_label]
+
+            # Show model metadata
+            if _chosen_id != "__custom__":
+                _meta = next(
+                    (m for m in _visible if m["name"].split("/")[-1] == _chosen_id), None
+                )
+                if _meta:
+                    with st.expander("Model details", expanded=False):
+                        if _meta.get("description"):
+                            st.caption(_meta["description"])
+                        _methods = _meta.get("supportedGenerationMethods", [])
+                        st.caption(f"Methods: `{'`, `'.join(_methods)}`")
+                        if _meta.get("inputTokenLimit"):
+                            st.caption(f"Input token limit: {_meta['inputTokenLimit']:,}")
+                        if _meta.get("outputTokenLimit"):
+                            st.caption(f"Output token limit: {_meta['outputTokenLimit']:,}")
+        else:
+            # -- Static fallback when not yet fetched --
+            _STATIC = {
+                "gemini-2.5-flash-image": "gemini-2.5-flash-image",
+                "gemini-2.0-flash-exp-image-generation": "gemini-2.0-flash-exp-image-generation",
+                "Custom model…": "__custom__",
+            }
+            _sel_label = st.selectbox(
+                "Gemini Model", list(_STATIC.keys()),
+                help="Enter an API key and click 🔍 Fetch to load all models available to your key.",
+            )
+            _chosen_id = _STATIC[_sel_label]
+
+        if _chosen_id == "__custom__":
             model_name = st.text_input("Model ID", placeholder="gemini-…")
         else:
-            model_name = _MODEL_OPTIONS[model_choice]
+            model_name = _chosen_id
+
         gemini_url = (
             f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent"
             if model_name else GEMINI_URL
