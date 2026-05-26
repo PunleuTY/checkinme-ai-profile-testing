@@ -69,20 +69,20 @@ class AiProfileGenerateService
                 $response = Http::withHeaders([
                     'Content-Type' => 'application/json'
                 ])->post("{$this->baseUrl}?key=" . $this->apiKey, [
-                    'contents' => [
-                        [
-                            'parts' => [
-                                ['text' => $prompt],
+                            'contents' => [
                                 [
-                                    'inline_data' => [
-                                        'mime_type' => 'image/png',
-                                        'data'      => $imageData
+                                    'parts' => [
+                                        ['text' => $prompt],
+                                        [
+                                            'inline_data' => [
+                                                'mime_type' => 'image/png',
+                                                'data' => $imageData
+                                            ]
+                                        ]
                                     ]
                                 ]
-                            ]
-                        ]
-                    ],
-                ]);
+                            ],
+                        ]);
 
                 if ($response->successful()) {
                     $data = $response->json();
@@ -119,25 +119,53 @@ class AiProfileGenerateService
     protected function getPrompts($gender, $limit, $offset, $aspectRatio = '1:1')
     {
         // ── Component 1: Gender intro ────────────────────────────────────
-        $commonIntro = "Generate a portrait of a professional " . ($gender === 'male' ? 'male' : 'female') . " ";
+        $commonIntro = "PROFESSIONAL HEADSHOT DIRECTIVE\n\nINPUT: Reference photograph of a real person\nOUTPUT: Professional " . ($gender === 'male' ? 'male' : 'female') . " corporate headshot,";
 
         // ── Component 2: Face preservation ──────────────────────────────
-        $commonFeatures = " STRICTLY PRESERVE the subject's original face. The output must look exactly like the person in the uploaded image. " .
-            "Do not alter facial structure, skin texture, or expression. " .
-            "The body should be centered with a natural, professional pose. " .
-            "Background must be a soft, solid, professional ID card style background.";
+        $commonFeatures = "\n\n━━━ IDENTITY — ZERO TOLERANCE FOR CHANGES ━━━\n" .
+            "The person in the generated image must be the EXACT SAME PERSON as in the reference photo.\n" .
+            "Treat the face as a locked, uneditable asset:\n" .
+            "→ Skin color and undertone: match exactly — same warmth, depth, and tone\n" .
+            "→ Skin texture: preserve all natural texture, pores, fine lines — no AI smoothing\n" .
+            "→ Facial geometry: same bone structure, proportions, and all features\n" .
+            "→ Eyes: same color, shape, spacing, and brow arch\n" .
+            "→ Hair: same color and style as shown\n" .
+            "→ Age: no de-aging or aging — keep the subject's natural age\n\n" .
+            "━━━ BACKGROUND ━━━\n" .
+            "Soft neutral grey — clean, uniform, professional studio backdrop.\n" .
+            "Completely free of texture, objects, or environmental context.\n" .
+            "Background must be consistent from center to all four edges of the frame.";
 
         // ── Component 3: Anatomy / collar fix ───────────────────────────
-        $neckFix = " Ensure the neck and shoulders are anatomically correct and proportional. " .
-            "The clothing must fit naturally around the neck/collar area without floating or weird cuts. ";
+        $neckFix = "\n\n━━━ ATTIRE ━━━\n" .
+            "Garment must be sharp, properly fitted, and wrinkle-free.\n" .
+            "Collar and neckline sit naturally against the neck — no gaps or floating fabric.\n" .
+            "Neck and shoulder anatomy anatomically correct and proportional.";
 
         // ── Component 4: Framing ─────────────────────────────────────────
-        $framingFix = " Frame the image from the top of the head to the mid-chest. ";
+        $framingFix = "\n\n━━━ FRAMING & POSE ━━━\n" .
+            "• Head-to-mid-chest crop — full crown of head with small headroom margin\n" .
+            "• Face centered horizontally\n" .
+            "• Upright, professional posture — relaxed shoulders, no unnatural tilt";
 
         // ── Component 5: Image quality ───────────────────────────────────
-        $imageQuality = " PHOTOREALISTIC style. The image must look like a high-end photograph. " .
-            "No cartoonish, 3D render, or filtered looks. " .
-            "Lighting should be natural studio lighting. ";
+        $imageQuality = "\n\n━━━ LIGHTING ━━━\n" .
+            "3-point studio setup:\n" .
+            "  • Key light — upper-left at 45°, soft box diffused\n" .
+            "  • Fill light — right side, softer intensity to open shadows\n" .
+            "  • Rim / hair light — subtle, from behind, to separate subject from background\n" .
+            "Result: even, shadow-minimized illumination; true-to-life color; no blown highlights on skin.\n\n" .
+            "━━━ TECHNICAL OUTPUT ━━━\n" .
+            "• Photorealistic DSLR photograph — high resolution, no compression artifacts\n" .
+            "• 85mm portrait lens equivalent at f/2.2 — face tack-sharp, background subtly soft\n" .
+            "• No artistic filters, no painterly or HDR effects, no stylization\n\n" .
+            "━━━ STRICT PROHIBITIONS ━━━\n" .
+            "✗ Do NOT generate a different face — the subject must be recognizable as the reference person\n" .
+            "✗ Do NOT smooth, beautify, or retouch skin\n" .
+            "✗ Do NOT change skin tone, hair color, or eye color\n" .
+            "✗ Do NOT alter facial proportions or make the person look any different\n" .
+            "✗ Do NOT add accessories, props, or background elements not specified\n" .
+            "✗ Do NOT apply cinematic, HDR, or stylized color grading";
 
         // ── Component 6: Outfit variants (16 per gender) ─────────────────
         $outfits = [
@@ -179,13 +207,13 @@ class AiProfileGenerateService
             ]
         ];
 
-        $genderKey    = ($gender === 'male') ? 'male' : 'female';
+        $genderKey = ($gender === 'male') ? 'male' : 'female';
         $styleVariants = $outfits[$genderKey];
 
         // Rotate array by offset so repeated calls cycle through unique outfits
         if ($offset > 0) {
-            $count         = count($styleVariants);
-            $offset        = $offset % $count;
+            $count = count($styleVariants);
+            $offset = $offset % $count;
             $styleVariants = array_merge(
                 array_slice($styleVariants, $offset),
                 array_slice($styleVariants, 0, $offset)
