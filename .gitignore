@@ -1,1 +1,77 @@
-__pycache__
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+*.whl
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+.env
+
+# Environment variables / secrets
+.env
+.env.*
+*.env
+secrets.json
+credentials.json
+api_keys.txt
+*.key
+*.pem
+*.p12
+*.pfx
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Jupyter / notebooks
+.ipynb_checkpoints/
+*.ipynb
+
+# Testing / coverage
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+*.log
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Output / reports
+results/
+output/
+exports/
+*.csv
+*.xlsx
+*.json
+reports/
+
+# PHP
+vendor/
+composer.lock
+*.log
+
+# Claude
+.claude/settings.local.json
