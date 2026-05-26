@@ -75,3 +75,8 @@ composer.lock
 
 # Claude
 .claude/settings.local.json
+
+# Test inputs / generated outputs
+dev-env/test-inputs/
+dev-env/outputs/
+testing-imgs/
