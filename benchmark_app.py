@@ -139,145 +139,43 @@ def build_production_prompt(gender: str, outfit_style: str) -> str:
 
 
 def build_experimental_prompt(
-    gender: str, outfit_style: str, background_style: str = "soft neutral grey"
+    gender: str, outfit_style: str, background_style: str = "seamless light grey studio backdrop"
 ) -> str:
-    """v1 — Photographer role + structured sections."""
-    gender_label = "male" if gender == "male" else "female"
-    return f"""You are a professional portrait photographer. Using the uploaded reference photo, generate a photorealistic headshot portrait with the following specifications:
-
-IDENTITY PRESERVATION (CRITICAL):
-- The subject's face must be IDENTICAL to the person in the uploaded image — same skin tone, eye color, nose shape, jawline, and every facial feature
-- Do NOT alter, enhance, smooth, or modify the face in any way
-- Preserve exact skin texture, any facial marks, and natural expression
-- Do not change hair color, hair style, or eyebrow shape
-
-SUBJECT & COMPOSITION:
-- Professional {gender_label} portrait
-- {outfit_style}
-- Framing: from the crown of the head to the mid-chest, face centered horizontally
-- Natural, confident, upright posture — shoulders squared to camera
-
-CLOTHING & ANATOMY:
-- Clothing must be sharp, properly fitted, wrinkle-free
-- Collar and neckline must sit naturally — no gaps, floating fabric, or distortion
-- Neck and shoulders must be anatomically correct and proportional
-
-BACKGROUND:
-- {background_style}, clean professional background (LinkedIn / ID card portrait style)
-- No props, no distractions — soft gradient or flat solid color only
-
-PHOTOGRAPHY STYLE:
-- Ultra-photorealistic — must look like a real photograph taken in a professional studio
-- No artistic filters, no painterly effects, no 3D rendering
-- Soft box studio lighting: main light slightly above-left, subtle fill from the right, minimal shadow under chin
-- Face in sharp focus, background softly diffused (shallow depth of field)
-- Color grading: neutral, true-to-life — no heavy warm/cool toning
-
-OUTPUT: A single portrait image matching all specifications above."""
-
-
-def build_experimental_prompt_v2(
-    gender: str, outfit_style: str, background_style: str = "soft neutral grey"
-) -> str:
-    """v2 — Step-by-step identity anchoring with explicit metric targets (skin tone, sharpness, bg uniformity)."""
-    gender_label = "male" if gender == "male" else "female"
-    return f"""You are processing a real reference photograph to generate a professional corporate headshot. The face in the reference photo must appear EXACTLY in the output — this is identity-critical.
-
-STEP 1 — ANCHOR THE IDENTITY (highest priority):
-Study every detail of the face in the uploaded photo before generating:
-• Skin tone and undertone (warm / cool / neutral) — match precisely
-• Skin texture: pores, fine lines, any marks or freckles — do not smooth away
-• Eye color, shape, and spacing
-• Nose shape, lip shape, jawline, and cheekbone structure
-• Hair: exact color, texture, and current style as shown
-• Apparent age — do not de-age or age the person
-• Ethnicity and all distinguishing features
-
-This face must appear UNCHANGED in the output.
-
-STEP 2 — APPLY PROFESSIONAL STYLING:
-Subject: {gender_label} professional
-Attire: {outfit_style}
-
-STEP 3 — COMPOSITION:
-• Framing: crown of head to mid-chest, 5–10% headroom above the head
-• Face horizontally centered in frame
-• Upright posture, shoulders relaxed, confident neutral expression
-
-STEP 4 — CLOTHING & ANATOMY:
-• Clothing crisp, well-tailored, wrinkle-free
-• Collar sits flat against neck — no floating fabric, no gaps
-• Neck and shoulder anatomy natural and proportional
-
-STEP 5 — BACKGROUND:
-• {background_style} — completely uniform solid or very subtle gradient
-• Must be clean all the way to the image edges — no texture or environmental elements
-
-STEP 6 — LIGHTING & FOCUS:
-• Professional soft-box studio setup: key light at 45° upper-left, gentle fill from right
-• Even illumination across the face — no harsh chin or nose shadows
-• True-to-life color rendition — no warm or cool color cast
-• Face razor-sharp in focus; background may have slight depth-of-field softness
-• Ultra-photorealistic — indistinguishable from a real studio photograph
-
-OUTPUT: Single portrait image exactly matching the above specifications."""
-
-
-def build_experimental_prompt_v3(
-    gender: str, outfit_style: str, background_style: str = "soft neutral grey"
-) -> str:
-    """v3 — Directive brief with strict prohibitions and 3-point lighting specification."""
-    gender_label = "male" if gender == "male" else "female"
-    return f"""PROFESSIONAL HEADSHOT DIRECTIVE
-
-INPUT: Reference photograph of a real person
-OUTPUT: Professional {gender_label} corporate headshot
-
-━━━ IDENTITY — ZERO TOLERANCE FOR CHANGES ━━━
-The person in the generated image must be the EXACT SAME PERSON as in the reference photo.
-Treat the face as a locked, uneditable asset:
-→ Skin color and undertone: match exactly — same warmth, depth, and tone
-→ Skin texture: preserve all natural texture, pores, fine lines — no AI smoothing
-→ Facial geometry: same bone structure, proportions, and all features
-→ Eyes: same color, shape, spacing, and brow arch
-→ Hair: same color and style as shown
-→ Age: no de-aging or aging — keep the subject's natural age
-
-━━━ ATTIRE ━━━
-{outfit_style}
-Garment must be sharp, properly fitted, and wrinkle-free.
-Collar and neckline sit naturally against the neck — no gaps or floating fabric.
-Neck and shoulder anatomy anatomically correct and proportional.
-
-━━━ FRAMING & POSE ━━━
-• Head-to-mid-chest crop — full crown of head with small headroom margin
-• Face centered horizontally
-• Upright, professional posture — relaxed shoulders, no unnatural tilt
-
-━━━ BACKGROUND ━━━
-{background_style} — clean, uniform, professional studio backdrop
-Completely free of texture, objects, or environmental context.
-Background must be consistent from center to all four edges of the frame.
-
-━━━ LIGHTING ━━━
-3-point studio setup:
-  • Key light — upper-left at 45°, soft box diffused
-  • Fill light — right side, softer intensity to open shadows
-  • Rim / hair light — subtle, from behind, to separate subject from background
-Result: even, shadow-minimized illumination; true-to-life color; no blown highlights on skin.
-
-━━━ TECHNICAL OUTPUT ━━━
-• Photorealistic DSLR photograph — high resolution, no compression artifacts
-• 85mm portrait lens equivalent at f/2.2 — face tack-sharp, background subtly soft
-• No artistic filters, no painterly or HDR effects, no stylization
-
-━━━ STRICT PROHIBITIONS ━━━
-✗ Do NOT generate a different face — the subject must be recognizable as the reference person
-✗ Do NOT smooth, beautify, or retouch skin
-✗ Do NOT change skin tone, hair color, or eye color
-✗ Do NOT alter facial proportions or make the person look any different
-✗ Do NOT add accessories, props, or background elements not specified
-✗ Do NOT apply cinematic, HDR, or stylized color grading"""
+    """Agency-studio headshot brief. Casting-agency / magazine realism (natural pores, beauty
+    lighting, 85mm look) with the original face/hairstyle preserved and the clothing replaced
+    with professional attire."""
+    return (
+        f"PROFESSIONAL PORTRAIT\n\n"
+        f"Image edit directive, convert the subject from the input photo into a clean professional "
+        f"studio headshot while preserving the exact face and hairstyle from the original image, "
+        f"but replacing the clothing with professional business attire. Dress the subject in "
+        f"{outfit_style}. Remove any non-professional items the person is wearing in the original "
+        f"photo — earphones, earbuds, headphones, hats, caps, sunglasses, lanyards, casual or "
+        f"novelty jewelry, and similar accessories must NOT appear in the output. Only keep "
+        f"prescription eyeglasses if the subject is wearing them. Studio portrait look. Tight head "
+        f"and shoulders framing, "
+        f"centered composition, neutral confident expression. Reposition the subject to face the "
+        f"camera directly in a straight-on, front-facing pose — head and shoulders squared to the "
+        f"camera with eyes looking directly into the lens — even if the original photo shows the "
+        f"person turned, angled, or posed to the left or right. "
+        f"Professional talent headshot aesthetic used by casting agencies and magazine profiles. "
+        f"Background minimal {background_style} with soft falloff. No visible texture or "
+        f"environment. Lighting setup high end studio beauty lighting. Large soft key light "
+        f"slightly above eye level, centered but angled down. Soft fill from front to remove harsh "
+        f"shadows. Subtle rim light behind shoulders for separation. Even illumination across face "
+        f"with gentle shadow under jawline. Catchlights visible in both eyes. Camera perspective "
+        f"eye level. Shot on common 85mm 118 portrait lenses. Crisp focus on eyes, shallow depth "
+        f"of field so ears and shoulders fall slightly softer. Skin rendering realistic and "
+        f"professional. Natural pores visible, subtle skin texture, no plastic smoothing. Balanced "
+        f"color grading, neutral skin tones, clean contrast. Hair carefully groomed but natural. "
+        f"Individual strands visible. The new clothing must look natural and realistic with "
+        f"accurate fabric texture, folds, and color, well-fitted and wrinkle-free, with the collar "
+        f"and neckline sitting naturally against the neck — no floating fabric or gaps, neck and "
+        f"shoulders anatomically correct. Retouch level magazine professional but realistic. "
+        f"Remove temporary blemishes only keep natural facial structure, freckles, pores, and fine "
+        f"lines. Final look polished agency headshot. Neutral background, balanced lighting, "
+        f"symmetrical framing, professional studio finish."
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -747,40 +645,6 @@ def main():
         bg_choice = st.selectbox("Background Style", list(BACKGROUND_OPTIONS.keys()))
         background_style = BACKGROUND_OPTIONS[bg_choice]
 
-        st.divider()
-        st.header("🧪 Experimental Prompt Source")
-        exp_version = st.radio(
-            "Prompt Version",
-            [
-                "v1 — Photographer Role",
-                "v2 — Step-by-Step Identity",
-                "v3 — Directive + Prohibitions",
-            ],
-            help=(
-                "v1: Photographer role prompt with structured sections (baseline experimental).\n"
-                "v2: Step-by-step identity anchoring — targets skin tone, sharpness, and bg uniformity metrics.\n"
-                "v3: Directive brief with 3-point lighting spec and explicit ✗ prohibitions."
-            ),
-        )
-        exp_version_key = {
-            "v1 — Photographer Role": 1,
-            "v2 — Step-by-Step Identity": 2,
-            "v3 — Directive + Prohibitions": 3,
-        }[exp_version]
-        exp_mode = st.radio(
-            "Outfit Source",
-            ["Production Outfits", "New Outfit Presets", "Fully Custom"],
-        )
-
-        if exp_mode == "Production Outfits":
-            experimental_outfit = st.selectbox("Outfit", PRODUCTION_OUTFITS[gender])
-        elif exp_mode == "New Outfit Presets":
-            experimental_outfit = st.selectbox("New Outfit", NEW_OUTFITS[gender])
-        else:
-            experimental_outfit = st.text_area(
-                "Custom Outfit Description", value=custom_outfit, height=100
-            )
-
     # ---- Upload ----
     col_up, col_prev = st.columns([2, 1])
     with col_up:
@@ -797,16 +661,11 @@ def main():
     # ---------------------------------------------------------------------------
     # Prompt editor
     # ---------------------------------------------------------------------------
-    _exp_builders = {
-        1: build_experimental_prompt,
-        2: build_experimental_prompt_v2,
-        3: build_experimental_prompt_v3,
-    }
     default_prod = build_production_prompt(gender, custom_outfit)
-    default_exp  = _exp_builders[exp_version_key](gender, experimental_outfit, background_style)
+    default_exp  = build_experimental_prompt(gender, custom_outfit, background_style)
 
-    # Auto-reload editors whenever version / outfit / background changes
-    fingerprint = f"{gender}|{custom_outfit}|{experimental_outfit}|{background_style}|{exp_version_key}"
+    # Auto-reload editors whenever outfit / background changes
+    fingerprint = f"{gender}|{custom_outfit}|{background_style}"
     if st.session_state["prompt_fingerprint"] != fingerprint:
         st.session_state["editor_prod"] = default_prod
         st.session_state["editor_exp"]  = default_exp
@@ -838,7 +697,7 @@ def main():
     with ec2:
         h2, b2 = st.columns([4, 1])
         with h2:
-            st.markdown(f"**🧪 Experimental — {exp_version}**")
+            st.markdown("**🧪 Experimental — Agency Studio**")
         with b2:
             if st.button("↺ Reset", key="reset_exp", use_container_width=True, help="Restore to selected version preset"):
                 st.session_state["editor_exp"] = default_exp
@@ -891,7 +750,7 @@ def main():
             prod_img = render_result("🏭 Production Prompt", prod_resp, "production")
             st.session_state.prod_img = prod_img
         with r2:
-            exp_img = render_result(f"🧪 Experimental — {exp_version}", exp_resp, "experimental")
+            exp_img = render_result("🧪 Experimental — Agency Studio", exp_resp, "experimental")
             st.session_state.exp_img = exp_img
 
         # Auto-compute metrics if both images generated
