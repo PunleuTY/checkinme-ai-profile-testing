@@ -418,7 +418,7 @@ def main():
     with st.sidebar:
         st.header("⚙️ Configuration")
         api_key = st.text_input(
-            "Gemini API Key", type="password", placeholder="AIza..."
+            "Gemini API Key", type="password", placeholder="......"
         )
 
         # ---- Model selector with live fetch ----
