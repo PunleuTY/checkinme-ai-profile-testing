@@ -551,101 +551,38 @@ def main():
         st.header("👔 Look Customization")
         st.caption("Applied to both prompts automatically.")
 
+        # 5 curated outfit sets per gender. Each combination is hand-picked to
+        # render naturally with the model; the first entry is the strongest look
+        # and is used as the default.
         if gender == "male":
-            suit_colors = {
-                "Black": "black",
-                "Navy Blue": "navy blue",
-                "Charcoal Grey": "charcoal grey",
-                "Dark Grey": "dark grey",
-                "Burgundy / Wine": "burgundy",
-                "Forest Green": "forest green",
-                "Steel Blue": "steel blue",
-                "Dark Brown": "dark brown",
-                "Deep Teal": "deep teal",
-                "Dark Plum": "dark plum",
+            outfit_sets = {
+                "Black Suit · White Shirt · Black Tie":
+                    "wearing a tailored black suit jacket over a crisp white shirt and a black silk tie",
+                "Navy Suit · White Shirt · Navy Tie":
+                    "wearing a navy blue suit jacket over a white shirt and a navy tie",
+                "Charcoal Suit · Light Blue Shirt · Charcoal Tie":
+                    "wearing a charcoal grey suit jacket over a light blue shirt and a charcoal tie",
+                "Dark Grey Suit · White Shirt · Silver Tie":
+                    "wearing a dark grey suit jacket over a white shirt and a silver tie",
+                "Navy Blazer · White Shirt · Open Collar":
+                    "wearing a smart navy blazer over a crisp white open-collar shirt, no tie",
             }
-            shirt_colors = {
-                "White": "white",
-                "Light Blue": "light blue",
-                "Light Grey": "light grey",
-                "Cream": "cream",
-            }
-            tie_options = {
-                "Black": "a black tie",
-                "Navy": "a navy tie",
-                "Dark Red / Burgundy": "a dark red tie",
-                "Silver": "a silver tie",
-                "Dark Blue": "a dark blue tie",
-                "Charcoal": "a charcoal tie",
-                "No Tie (Open Collar)": None,
-            }
-            suit_color = st.selectbox("Suit / Blazer Color", list(suit_colors.keys()))
-            shirt_color = st.selectbox("Shirt Color", list(shirt_colors.keys()))
-            tie_choice = st.selectbox("Tie", list(tie_options.keys()))
-            pocket_sq = st.checkbox("White Pocket Square")
-
-            tie_val = tie_options[tie_choice]
-            tie_text = f"and {tie_val}" if tie_val else "with open collar, no tie"
-            ps_text = " with a white pocket square" if pocket_sq else ""
-            custom_outfit = (
-                f"wearing a tailored {suit_colors[suit_color]} suit jacket"
-                f" over a {shirt_colors[shirt_color]} shirt {tie_text}{ps_text}"
-            )
         else:
-            blazer_colors = {
-                "Black": "black",
-                "Navy Blue": "navy blue",
-                "Charcoal Grey": "charcoal grey",
-                "Dark Grey": "dark grey",
-                "Burgundy / Wine": "burgundy",
-                "Forest Green": "forest green",
-                "Cobalt Blue": "cobalt blue",
-                "Emerald Green": "emerald green",
-                "Camel / Tan": "camel",
-                "White / Ivory": "white",
+            outfit_sets = {
+                "Black Blazer · White Blouse":
+                    "wearing a tailored black blazer over a crisp white blouse",
+                "Navy Blazer · White Blouse":
+                    "wearing a navy blue blazer over a clean white blouse",
+                "Charcoal Blazer · Light Blue Blouse":
+                    "wearing a charcoal grey blazer over a light blue blouse",
+                "Dark Grey Blazer · White Blouse":
+                    "wearing a dark grey blazer over a white blouse",
+                "Navy Blazer · White Top · Pearl Studs":
+                    "wearing a navy blue blazer over a white top with small pearl stud earrings",
             }
-            blouse_colors = {
-                "White": "white",
-                "Light Blue": "light blue",
-                "Light Grey": "light grey",
-                "Cream": "cream",
-                "Soft Pink": "soft pink",
-            }
-            jewelry_options = {
-                "None": "",
-                "Pearl Stud Earrings": "pearl stud earrings",
-                "Pearl Drop Earrings": "pearl drop earrings",
-                "Single-Strand Pearl Necklace": "a single-strand pearl necklace",
-                "Delicate Gold Chain Necklace": "a delicate thin gold chain necklace",
-                "Gold Pendant Necklace": "a small gold pendant necklace",
-                "Diamond Stud Earrings": "diamond stud earrings",
-                "Small Gold Hoop Earrings": "small gold hoop earrings",
-                "Rose Gold Stud Earrings": "rose gold stud earrings",
-            }
-            scarf_options = {
-                "None": "",
-                "Silk Scarf (Navy)": "a silk neck scarf in navy loosely tied",
-                "Silk Scarf (Burgundy)": "a silk neck scarf in burgundy loosely tied",
-            }
-            blazer_color = st.selectbox("Blazer Color", list(blazer_colors.keys()))
-            blouse_color = st.selectbox(
-                "Blouse / Top Color", list(blouse_colors.keys())
-            )
-            jewelry = st.selectbox("Jewelry", list(jewelry_options.keys()))
-            scarf = st.selectbox("Scarf", list(scarf_options.keys()))
-            brooch = st.checkbox("Gold Lapel Pin / Brooch")
 
-            accessories = [
-                x for x in [jewelry_options[jewelry], scarf_options[scarf]] if x
-            ]
-            if brooch:
-                accessories.append("a subtle gold lapel pin on the blazer")
-            custom_outfit = (
-                f"wearing a tailored {blazer_colors[blazer_color]} blazer"
-                f" over a {blouse_colors[blouse_color]} blouse"
-            )
-            if accessories:
-                custom_outfit += f", accessorized with {', '.join(accessories)}"
+        outfit_choice = st.selectbox("Outfit Set", list(outfit_sets.keys()))
+        custom_outfit = outfit_sets[outfit_choice]
 
         st.divider()
         st.header("🖼️ Background")
