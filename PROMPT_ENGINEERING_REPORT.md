@@ -3,8 +3,29 @@
 **Project:** CheckinMe AI Profile Generator  
 **Scope:** Prompt design, comparative benchmarking framework, and tooling  
 **Model:** Google Gemini 2.5 Flash Image (configurable)  
-**Date:** 2026-05-08  
-**Status:** Experimental — benchmark runs in progress
+**Date:** 2026-06-05 (rev. 2 — reflects current production prompt)  
+**Status:** Directive + Prohibitions variant adopted into production; benchmarking ongoing
+
+---
+
+## Revision Note — 2026-06-05
+
+Since rev. 1 (2026-05-08), the **Directive + Prohibitions** structure originally
+introduced as experimental **v3** has been promoted to the **live production prompt**
+in `AiProfileGenerateService.php`. The earlier "ID card style" baseline described in
+rev. 1 is now the *legacy* prompt and is retained for historical comparison in
+[Appendix E](#e-legacy-production-prompt-pre-202606).
+
+Changes in this revision:
+
+- Production prompt is now assembled from six modular components in `getPrompts()`
+  (gender intro, outfit variant, identity/background block, framing, attire, lighting/quality).
+- The three structural weaknesses identified in §3.3 (late identity anchoring, no skin-tone
+  instruction, ambiguous background) are **resolved** by the current production prompt.
+- New [§6.7](#67-current-production-prompt--engineering-type-pros--cons) classifies the
+  prompt-engineering *type* of the current production prompt and documents its pros and cons.
+- [Appendix A](#a-production-prompt-current--directive--prohibitions) now contains the
+  current production prompt text.
 
 ---
 
@@ -35,6 +56,12 @@ Key contributions of this work:
 - Design of three experimental prompt variants, each addressing a different hypothesis about model instruction following.
 - A reproducible benchmarking tool supporting side-by-side visual comparison, automated metric computation, and human rating capture.
 - A configurable model selector enabling cross-model comparisons without code changes.
+
+**Outcome (as of this revision):** The **Directive + Prohibitions** variant (formerly
+experimental v3) has been adopted as the production prompt. It pairs strong positive
+identity anchoring with an explicit negative-constraint block and a modular, sectioned
+layout. See [§6.7](#67-current-production-prompt--engineering-type-pros--cons) for the
+prompt-engineering classification and a candid pros/cons assessment of this approach.
 
 ---
 
@@ -86,9 +113,17 @@ The combined effect is a headshot that looks professional but is not recognisabl
 | Background noise | Gradient, texture, or vignette at corners | Background Uniformity (15%) |
 | Anatomical distortion | Floating collar, misaligned neck | Qualitative — Clothing Quality |
 
-### 3.3 Structural Weaknesses in the Production Prompt
+### 3.3 Structural Weaknesses in the Legacy Production Prompt
 
-Analysis of `build_production_prompt()` reveals three structural issues:
+> **Resolved in current production (2026-06-05).** The three issues below were identified
+> in the *legacy* production prompt ([Appendix E](#e-legacy-production-prompt-pre-202606)).
+> All three are addressed by the current Directive + Prohibitions production prompt
+> ([Appendix A](#a-production-prompt-current--directive--prohibitions)): identity is anchored
+> immediately after the outfit clause, skin colour and undertone are named explicitly and
+> reinforced by a prohibition, and the background block requires consistency "from center to
+> all four edges of the frame." This section is retained to document the original rationale.
+
+Analysis of the legacy `build_production_prompt()` revealed three structural issues:
 
 **Issue 1 — Late identity anchoring.**  
 The production prompt opens with outfit instruction (`Generate a portrait of a professional [gender] [outfit]`) before stating face preservation requirements. This ordering implicitly signals that the primary task is outfit generation, with identity preservation as a constraint. Multimodal LLMs tend to weight earlier instructions more heavily during synthesis.
@@ -226,14 +261,19 @@ Final = 0.60 × Quantitative_Overall + 0.40 × Qualitative_Average
 
 Each experimental version tests a distinct hypothesis about how Gemini processes multimodal instructions:
 
-| Version | Hypothesis |
-|---|---|
-| Production | Baseline: implicit identity constraint appended after outfit instruction. |
-| v1 — Photographer Role | Assigning a domain expert persona improves instruction compliance for professional outputs. |
-| v2 — Step-by-Step Identity | Sequential processing steps with explicit metric-aligned sub-instructions improve targeted output quality. |
-| v3 — Directive + Prohibitions | Explicit negative constraints (`✗ DO NOT`) are more reliably honoured than equivalent positive instructions. |
+| Version | Hypothesis | Status |
+|---|---|---|
+| Legacy Production | Baseline: implicit identity constraint appended after outfit instruction. | Retired (see Appendix E) |
+| v1 — Photographer Role | Assigning a domain expert persona improves instruction compliance for professional outputs. | Experimental |
+| v2 — Step-by-Step Identity | Sequential processing steps with explicit metric-aligned sub-instructions improve targeted output quality. | Experimental |
+| v3 — Directive + Prohibitions | Explicit negative constraints (`✗ DO NOT`) are more reliably honoured than equivalent positive instructions. | **Adopted to production** |
 
-### 6.2 Production Prompt (Baseline)
+### 6.2 Legacy Production Prompt (Retired Baseline)
+
+> This was the production prompt at rev. 1. It has since been replaced by the Directive +
+> Prohibitions structure (see [§6.5](#65-experimental-v3--directive--prohibitions) and
+> [§6.7](#67-current-production-prompt--engineering-type-pros--cons)). Full text in
+> [Appendix E](#e-legacy-production-prompt-pre-202606).
 
 **Approximate length:** ~430 characters / ~75 words
 
@@ -387,6 +427,64 @@ Treat the face as a locked, uneditable asset:
 
 ---
 
+### 6.7 Current Production Prompt — Engineering Type, Pros & Cons
+
+The prompt now shipping in `AiProfileGenerateService::getPrompts()` is the Directive +
+Prohibitions structure. It is not a single technique but a deliberate **stack** of several.
+Its dominant classification is:
+
+> **Zero-shot, structured/modular instructional prompting with heavy constraint (negative)
+> prompting** — applied to a text-to-image multimodal model.
+
+#### 6.7.1 Techniques in the stack
+
+| # | Technique | Where it appears in the current prompt |
+|---|---|---|
+| 1 | **Modular / compositional (template) prompting** | Final string assembled from six reusable blocks: `{$commonIntro} {$style}.{$commonFeatures}{$framingFix}{$neckFix}{$imageQuality}`. Only the outfit clause varies per image. |
+| 2 | **Zero-shot prompting** | Pure instructions — no example input/output pairs are supplied to the model. |
+| 3 | **Instructional / directive prompting** | Command voice with an explicit `INPUT:` / `OUTPUT:` contract (`PROFESSIONAL HEADSHOT DIRECTIVE`). |
+| 4 | **Constraint / negative prompting** | A terminal `STRICT PROHIBITIONS` block of `✗ Do NOT…` rules, plus the `IDENTITY — ZERO TOLERANCE` framing. This is the defining feature. |
+| 5 | **Delimiter / sectioned formatting** | `━━━ SECTION ━━━` headers segment the prompt (IDENTITY, BACKGROUND, FRAMING, ATTIRE, LIGHTING, TECHNICAL, PROHIBITIONS). |
+| 6 | **Emphasis / repetition (priming)** | Identity preservation is stated up front *and* restated as a prohibition; CAPS and `→` arrows weight critical tokens. |
+| 7 | **Parameterized variation** | `$limit` / `$offset` rotate a 16-item outfit list, yielding controlled diversity from one template rather than relying on model randomness. |
+
+One-line label for citation: *"structured zero-shot instructional prompting with negative
+constraints (modular, template-based)."*
+
+#### 6.7.2 Pros
+
+- **Consistency & reproducibility** — identity, background, framing, lighting, and quality
+  are fixed blocks, so every headshot reads as if from the same studio; only the outfit changes.
+- **Maintainability (DRY)** — six isolated components mean one lever can be tuned without
+  touching the others; the service file documents these as the tunable surface.
+- **Controlled diversity** — `offset`/`limit` rotation produces unique-but-on-brand variants
+  deterministically.
+- **Strong guardrails** — explicit `Do NOT` prohibitions directly target the known failure
+  modes (face drift, skin smoothing/beautification, added accessories, HDR stylization).
+- **Self-documenting** — section delimiters make intent legible to both the model and future maintainers.
+- **Low cost / low complexity** — zero-shot needs no example corpus, fine-tuning, or retrieval pipeline.
+
+#### 6.7.3 Cons
+
+- **Verbosity → token cost & dilution** — the prompt is long and repetitive; past a point,
+  image models weight tokens unevenly and key instructions can be averaged out.
+- **Negative-prompt unreliability** — image models often honour `Do NOT X` poorly; naming a
+  concept (e.g. "HDR", "accessories") can *raise* its chance of appearing. Native negative-prompt
+  fields are usually more reliable than in-prompt prohibitions.
+- **No reference grounding for style** — identity rides entirely on the single input image plus
+  words; a few-shot or stronger conditioning signal typically locks identity better than
+  "ZERO TOLERANCE" phrasing.
+- **Model-coupling / brittleness** — wording is tuned to `gemini-2.5-flash-image`; a model swap
+  can silently degrade results with no example-based anchoring to cushion it.
+- **Soft / unenforced parameters** — `aspectRatio` is passed as prompt *text only*, not via API
+  config, so the model may ignore it. Instruction-as-text is weaker than a real config constraint.
+- **Limited semantic diversity** — variation is only the outfit string (mostly suit/blazer colour
+  permutations); pose, expression, and crop are frozen, so outputs can feel templated.
+- **Emphasis overuse** — heavy CAPS and symbols have diminishing returns and can hurt if the model
+  over-anchors on "shouted" tokens.
+
+---
+
 ## 7. Benchmarking Tool Design
 
 ### 7.1 Prompt Editor
@@ -490,21 +588,68 @@ Note: Longer prompts are not always better. There is a risk that v3's structured
 
 ## 10. Appendix — Full Prompt Texts
 
-### A. Production Prompt
+### A. Production Prompt (Current — Directive + Prohibitions)
+
+This is the live production prompt assembled by `AiProfileGenerateService::getPrompts()`.
+Shown for a male subject, first outfit variant; `{outfit}` is substituted per variant and
+the background is fixed to soft neutral grey.
 
 ```
-Generate a portrait of a professional {gender} {outfit}.
-STRICTLY PRESERVE the subject's original face. The output must look exactly like
-the person in the uploaded image. Do not alter facial structure, skin texture, or
-expression. The body should be centered with a natural, professional pose.
-Background must be a soft, solid, professional ID card style background.
-Frame the image from the top of the head to the mid-chest.
-Ensure the neck and shoulders are anatomically correct and proportional.
-The clothing must fit naturally around the neck/collar area without floating or
-weird cuts.
-PHOTOREALISTIC style. The image must look like a high-end photograph.
-No cartoonish, 3D render, or filtered looks. Lighting should be natural studio lighting.
+PROFESSIONAL HEADSHOT DIRECTIVE
+
+INPUT: Reference photograph of a real person
+OUTPUT: Professional {gender} corporate headshot, {outfit}.
+
+━━━ IDENTITY — ZERO TOLERANCE FOR CHANGES ━━━
+The person in the generated image must be the EXACT SAME PERSON as in the reference photo.
+Treat the face as a locked, uneditable asset:
+→ Skin color and undertone: match exactly — same warmth, depth, and tone
+→ Skin texture: preserve all natural texture, pores, fine lines — no AI smoothing
+→ Facial geometry: same bone structure, proportions, and all features
+→ Eyes: same color, shape, spacing, and brow arch
+→ Hair: same color and style as shown
+→ Age: no de-aging or aging — keep the subject's natural age
+
+━━━ BACKGROUND ━━━
+Soft neutral grey — clean, uniform, professional studio backdrop.
+Completely free of texture, objects, or environmental context.
+Background must be consistent from center to all four edges of the frame.
+
+━━━ FRAMING & POSE ━━━
+• Head-to-mid-chest crop — full crown of head with small headroom margin
+• Face centered horizontally
+• Upright, professional posture — relaxed shoulders, no unnatural tilt
+
+━━━ ATTIRE ━━━
+Garment must be sharp, properly fitted, and wrinkle-free.
+Collar and neckline sit naturally against the neck — no gaps or floating fabric.
+Neck and shoulder anatomy anatomically correct and proportional.
+
+━━━ LIGHTING ━━━
+3-point studio setup:
+  • Key light — upper-left at 45°, soft box diffused
+  • Fill light — right side, softer intensity to open shadows
+  • Rim / hair light — subtle, from behind, to separate subject from background
+Result: even, shadow-minimized illumination; true-to-life color; no blown highlights on skin.
+
+━━━ TECHNICAL OUTPUT ━━━
+• Photorealistic DSLR photograph — high resolution, no compression artifacts
+• 85mm portrait lens equivalent at f/2.2 — face tack-sharp, background subtly soft
+• No artistic filters, no painterly or HDR effects, no stylization
+
+━━━ STRICT PROHIBITIONS ━━━
+✗ Do NOT generate a different face — the subject must be recognizable as the reference person
+✗ Do NOT smooth, beautify, or retouch skin
+✗ Do NOT change skin tone, hair color, or eye color
+✗ Do NOT alter facial proportions or make the person look any different
+✗ Do NOT add accessories, props, or background elements not specified
+✗ Do NOT apply cinematic, HDR, or stylized color grading
 ```
+
+> **Component map** (assembly order in `getPrompts()`):
+> `$commonIntro` (intro + `{gender}` + `{outfit}`) → `$commonFeatures` (IDENTITY + BACKGROUND)
+> → `$framingFix` (FRAMING & POSE) → `$neckFix` (ATTIRE) → `$imageQuality`
+> (LIGHTING + TECHNICAL OUTPUT + STRICT PROHIBITIONS).
 
 ---
 
@@ -652,6 +797,27 @@ highlights on skin.
 ✗ Do NOT alter facial proportions or make the person look any different
 ✗ Do NOT add accessories, props, or background elements not specified
 ✗ Do NOT apply cinematic, HDR, or stylized color grading
+```
+
+---
+
+### E. Legacy Production Prompt (pre-2026-06)
+
+Retained for historical comparison. This was the production prompt at rev. 1, before the
+Directive + Prohibitions structure (Appendix A) was adopted.
+
+```
+Generate a portrait of a professional {gender} {outfit}.
+STRICTLY PRESERVE the subject's original face. The output must look exactly like
+the person in the uploaded image. Do not alter facial structure, skin texture, or
+expression. The body should be centered with a natural, professional pose.
+Background must be a soft, solid, professional ID card style background.
+Frame the image from the top of the head to the mid-chest.
+Ensure the neck and shoulders are anatomically correct and proportional.
+The clothing must fit naturally around the neck/collar area without floating or
+weird cuts.
+PHOTOREALISTIC style. The image must look like a high-end photograph.
+No cartoonish, 3D render, or filtered looks. Lighting should be natural studio lighting.
 ```
 
 ---
