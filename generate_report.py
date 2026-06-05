@@ -292,8 +292,8 @@ def build_cover(story, styles):
         [Paragraph("Project: CheckinMe", styles["cover_meta"])],
         [Paragraph("Model: Google Gemini 2.5 Flash Image (configurable)", styles["cover_meta"])],
         [Paragraph("Scope: Prompt design, comparative benchmarking &amp; tooling", styles["cover_meta"])],
-        [Paragraph(f"Date: {datetime.date.today().strftime('%d %B %Y')}", styles["cover_meta"])],
-        [Paragraph("Status: Experimental — benchmark runs in progress", styles["cover_meta"])],
+        [Paragraph(f"Date: {datetime.date.today().strftime('%d %B %Y')} (rev. 2)", styles["cover_meta"])],
+        [Paragraph("Status: Directive + Prohibitions variant adopted into production", styles["cover_meta"])],
     ]
     cover_tbl = Table(cover_content, colWidths=[avail_w],
                       rowHeights=[None]*len(cover_content))
@@ -319,7 +319,9 @@ def build_cover(story, styles):
         "This report documents a structured prompt engineering initiative to improve "
         "face identity preservation, skin tone fidelity, image sharpness, and background "
         "uniformity in AI-generated professional headshots. Four prompt versions are designed, "
-        "benchmarked, and compared against a seven-metric quantitative framework.",
+        "benchmarked, and compared against a seven-metric quantitative framework. As of this "
+        "revision (rev. 2), the Directive + Prohibitions variant (formerly experimental v3) "
+        "has been adopted as the live production prompt.",
         styles)
 
     story.append(PageBreak())
@@ -341,7 +343,7 @@ def build_toc(story, styles):
         ("3.", "Problem Statement", False),
         ("  3.1", "Primary Failure Mode: Identity Drift", True),
         ("  3.2", "Secondary Failure Modes", True),
-        ("  3.3", "Structural Weaknesses in the Production Prompt", True),
+        ("  3.3", "Structural Weaknesses in the Legacy Production Prompt", True),
         ("4.", "Technical Architecture", False),
         ("  4.1", "Production Service (AiProfileGenerateService.php)", True),
         ("  4.2", "Benchmarking Application (benchmark_app.py)", True),
@@ -353,11 +355,12 @@ def build_toc(story, styles):
         ("  5.4", "Final Combined Score", True),
         ("6.", "Prompt Engineering Analysis", False),
         ("  6.1", "Design Philosophy", True),
-        ("  6.2", "Production Prompt (Baseline)", True),
+        ("  6.2", "Legacy Production Prompt (Retired Baseline)", True),
         ("  6.3", "Experimental v1 — Photographer Role", True),
         ("  6.4", "Experimental v2 — Step-by-Step Identity", True),
         ("  6.5", "Experimental v3 — Directive + Prohibitions", True),
         ("  6.6", "Prompt Comparison Summary", True),
+        ("  6.7", "Current Production Prompt — Type, Pros & Cons", True),
         ("7.", "Benchmarking Tool Design", False),
         ("8.", "Results", False),
         ("9.", "Recommendations", False),
@@ -404,6 +407,13 @@ def build_executive_summary(story, styles):
         "A live prompt editor allowing real-time prompt modifications and A/B testing "
         "directly in the Streamlit UI.",
     ], styles)
+
+    callout_box(story,
+        "<b>Outcome (rev. 2):</b> The Directive + Prohibitions variant (formerly experimental "
+        "v3) has been adopted as the production prompt. It pairs strong positive identity "
+        "anchoring with an explicit negative-constraint block and a modular, sectioned layout. "
+        "See section 6.7 for the prompt-engineering classification and a pros/cons assessment.",
+        styles, colour=LIGHTGREY, border=GREEN)
 
 
 # ---------------------------------------------------------------------------
@@ -499,10 +509,19 @@ def build_problem_statement(story, styles):
         col_widths=[4*cm, 7*cm, 6.5*cm],
     )
 
-    h2(story, "3.3  Structural Weaknesses in the Production Prompt", styles)
+    h2(story, "3.3  Structural Weaknesses in the Legacy Production Prompt", styles)
+    callout_box(story,
+        "<b>Resolved in current production (rev. 2).</b> The three issues below were identified "
+        "in the legacy production prompt (Appendix E). All three are addressed by the current "
+        "Directive + Prohibitions production prompt (Appendix A): identity is anchored "
+        "immediately after the outfit clause, skin colour and undertone are named explicitly "
+        "and reinforced by a prohibition, and the background block requires consistency from "
+        "centre to all four edges of the frame. This section is retained to document the "
+        "original rationale.",
+        styles, colour=LIGHTGREY, border=GREEN)
     body(story,
-        "Analysis of <font name='Courier'>build_production_prompt()</font> reveals three "
-        "structural issues:", styles)
+        "Analysis of the legacy <font name='Courier'>build_production_prompt()</font> revealed "
+        "three structural issues:", styles)
 
     h3(story, "Issue 1 — Late identity anchoring", styles)
     body(story,
@@ -689,26 +708,34 @@ def build_prompt_engineering(story, styles):
         "Each experimental version tests a distinct hypothesis about how Gemini "
         "processes multimodal instructions:", styles)
     metric_table(story,
-        ["Version", "Hypothesis"],
+        ["Version", "Hypothesis", "Status"],
         [
-            ["Production",
-             "Baseline: implicit identity constraint appended after outfit instruction."],
+            ["Legacy Production",
+             "Baseline: implicit identity constraint appended after outfit instruction.",
+             "Retired"],
             ["v1 — Photographer Role",
              "Assigning a domain expert persona improves instruction compliance for "
-             "professional outputs."],
+             "professional outputs.",
+             "Experimental"],
             ["v2 — Step-by-Step Identity",
              "Sequential processing steps with explicit metric-aligned sub-instructions "
-             "improve targeted output quality."],
+             "improve targeted output quality.",
+             "Experimental"],
             ["v3 — Directive + Prohibitions",
              "Explicit negative constraints (✗ DO NOT) are more reliably honoured "
-             "than equivalent positive instructions."],
+             "than equivalent positive instructions.",
+             "Adopted to production"],
         ],
         styles,
-        col_widths=[4.5*cm, 13*cm],
+        col_widths=[3.6*cm, 10.6*cm, 3.3*cm],
     )
 
     # ---- Production ----
-    h2(story, "6.2  Production Prompt (Baseline)", styles)
+    h2(story, "6.2  Legacy Production Prompt (Retired Baseline)", styles)
+    body(story,
+        "<i>This was the production prompt at rev. 1. It has since been replaced by the "
+        "Directive + Prohibitions structure (section 6.5 and 6.7). Full text in Appendix E.</i>",
+        styles)
     metric_table(story,
         ["Attribute", "Value"],
         [
@@ -844,6 +871,82 @@ def build_prompt_engineering(story, styles):
         ],
         styles, col_widths=[7*cm, 2.5*cm, 2.5*cm, 2.5*cm, 2.5*cm],
     )
+
+    # ---- 6.7 Current production prompt: type, pros & cons ----
+    h2(story, "6.7  Current Production Prompt — Engineering Type, Pros & Cons", styles)
+    body(story,
+        "The prompt now shipping in "
+        "<font name='Courier'>AiProfileGenerateService::getPrompts()</font> is the Directive + "
+        "Prohibitions structure. It is not a single technique but a deliberate stack of several. "
+        "Its dominant classification is <b>zero-shot, structured/modular instructional prompting "
+        "with heavy constraint (negative) prompting</b>, applied to a text-to-image multimodal "
+        "model.", styles)
+
+    h3(story, "Techniques in the stack", styles)
+    metric_table(story,
+        ["Technique", "Where it appears in the current prompt"],
+        [
+            ["Modular / compositional (template)",
+             "Final string assembled from six reusable blocks (intro, outfit, identity+"
+             "background, framing, attire, lighting/quality). Only the outfit clause varies."],
+            ["Zero-shot",
+             "Pure instructions — no example input/output pairs are supplied to the model."],
+            ["Instructional / directive",
+             "Command voice with an explicit INPUT / OUTPUT contract "
+             "('PROFESSIONAL HEADSHOT DIRECTIVE')."],
+            ["Constraint / negative (defining)",
+             "A terminal STRICT PROHIBITIONS block of ✗ Do NOT rules, plus the "
+             "IDENTITY — ZERO TOLERANCE framing."],
+            ["Delimiter / sectioned formatting",
+             "━━━ SECTION ━━━ headers segment the prompt into semantic regions."],
+            ["Emphasis / repetition (priming)",
+             "Identity preservation is stated up front and restated as a prohibition; "
+             "CAPS and → arrows weight critical tokens."],
+            ["Parameterized variation",
+             "limit / offset rotate a 16-item outfit list for controlled diversity from "
+             "one template."],
+        ],
+        styles, col_widths=[5*cm, 12.5*cm],
+    )
+    body(story,
+        "<b>One-line label for citation:</b> <i>structured zero-shot instructional prompting "
+        "with negative constraints (modular, template-based).</i>", styles)
+
+    h3(story, "Pros", styles)
+    bullet(story, [
+        "<b>Consistency &amp; reproducibility</b> — fixed blocks make every headshot read as "
+        "if from the same studio; only the outfit changes.",
+        "<b>Maintainability (DRY)</b> — six isolated components let one lever be tuned without "
+        "touching the others.",
+        "<b>Controlled diversity</b> — offset/limit rotation produces unique-but-on-brand "
+        "variants deterministically.",
+        "<b>Strong guardrails</b> — explicit Do NOT prohibitions target known failure modes "
+        "(face drift, skin smoothing, added accessories, HDR stylization).",
+        "<b>Self-documenting</b> — section delimiters make intent legible to the model and to "
+        "future maintainers.",
+        "<b>Low cost / low complexity</b> — zero-shot needs no example corpus, fine-tuning, or "
+        "retrieval pipeline.",
+    ], styles)
+
+    h3(story, "Cons", styles)
+    bullet(story, [
+        "<b>Verbosity → token cost &amp; dilution</b> — long, repetitive prompts can cause "
+        "image models to weight tokens unevenly and average out key instructions.",
+        "<b>Negative-prompt unreliability</b> — image models often honour 'Do NOT X' poorly; "
+        "naming a concept can raise its chance of appearing. Native negative-prompt fields are "
+        "usually more reliable.",
+        "<b>No reference grounding for style</b> — identity rides on the single input image "
+        "plus words; few-shot or stronger conditioning typically locks identity better than "
+        "'ZERO TOLERANCE' phrasing.",
+        "<b>Model-coupling / brittleness</b> — wording is tuned to gemini-2.5-flash-image; a "
+        "model swap can silently degrade results.",
+        "<b>Soft / unenforced parameters</b> — aspectRatio is passed as prompt text only, not "
+        "via API config, so the model may ignore it.",
+        "<b>Limited semantic diversity</b> — variation is only the outfit string; pose, "
+        "expression, and crop are frozen, so outputs can feel templated.",
+        "<b>Emphasis overuse</b> — heavy CAPS and symbols have diminishing returns and can hurt "
+        "if the model over-anchors on 'shouted' tokens.",
+    ], styles)
 
 
 # ---------------------------------------------------------------------------
@@ -999,6 +1102,61 @@ def build_recommendations(story, styles):
 # Section 10: Appendix
 # ---------------------------------------------------------------------------
 
+# Current production prompt — assembled by AiProfileGenerateService::getPrompts()
+# (male subject, first outfit variant; {outfit} substituted per variant).
+CURRENT_PROD_PROMPT = """\
+PROFESSIONAL HEADSHOT DIRECTIVE
+
+INPUT: Reference photograph of a real person
+OUTPUT: Professional {gender} corporate headshot, {outfit}.
+
+IDENTITY — ZERO TOLERANCE FOR CHANGES
+The person in the generated image must be the EXACT SAME PERSON as in the
+reference photo. Treat the face as a locked, uneditable asset:
+  Skin color and undertone: match exactly — same warmth, depth, and tone
+  Skin texture: preserve all natural texture, pores, fine lines — no AI smoothing
+  Facial geometry: same bone structure, proportions, and all features
+  Eyes: same color, shape, spacing, and brow arch
+  Hair: same color and style as shown
+  Age: no de-aging or aging — keep the subject's natural age
+
+BACKGROUND
+Soft neutral grey — clean, uniform, professional studio backdrop.
+Completely free of texture, objects, or environmental context.
+Background must be consistent from center to all four edges of the frame.
+
+FRAMING & POSE
+  Head-to-mid-chest crop — full crown of head with small headroom margin
+  Face centered horizontally
+  Upright, professional posture — relaxed shoulders, no unnatural tilt
+
+ATTIRE
+Garment must be sharp, properly fitted, and wrinkle-free.
+Collar and neckline sit naturally against the neck — no gaps or floating fabric.
+Neck and shoulder anatomy anatomically correct and proportional.
+
+LIGHTING
+3-point studio setup:
+  Key light — upper-left at 45°, soft box diffused
+  Fill light — right side, softer intensity to open shadows
+  Rim / hair light — subtle, from behind, to separate subject from background
+Result: even, shadow-minimized illumination; true-to-life color; no blown
+highlights on skin.
+
+TECHNICAL OUTPUT
+  Photorealistic DSLR photograph — high resolution, no compression artifacts
+  85mm portrait lens equivalent at f/2.2 — face tack-sharp, background subtly soft
+  No artistic filters, no painterly or HDR effects, no stylization
+
+STRICT PROHIBITIONS
+  Do NOT generate a different face — must be recognizable as the reference person
+  Do NOT smooth, beautify, or retouch skin
+  Do NOT change skin tone, hair color, or eye color
+  Do NOT alter facial proportions or make the person look any different
+  Do NOT add accessories, props, or background elements not specified
+  Do NOT apply cinematic, HDR, or stylized color grading"""
+
+# Legacy production prompt (pre-2026-06) — retained for historical comparison.
 PROD_PROMPT = """\
 Generate a portrait of a professional {gender} {outfit}.
 STRICTLY PRESERVE the subject's original face. The output must look exactly
@@ -1139,10 +1297,11 @@ def build_appendix(story, styles):
     h1(story, "10. Appendix — Full Prompt Texts", styles)
 
     for version, prompt_text in [
-        ("A  Production Prompt (Baseline)", PROD_PROMPT),
+        ("A  Production Prompt (Current — Directive + Prohibitions)", CURRENT_PROD_PROMPT),
         ("B  Experimental v1 — Photographer Role", V1_PROMPT),
         ("C  Experimental v2 — Step-by-Step Identity", V2_PROMPT),
         ("D  Experimental v3 — Directive + Prohibitions", V3_PROMPT),
+        ("E  Legacy Production Prompt (pre-2026-06)", PROD_PROMPT),
     ]:
         story.append(KeepTogether([
             Paragraph(f"<b>{version}</b>", styles["h2"]),
