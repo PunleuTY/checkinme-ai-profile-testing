@@ -162,28 +162,50 @@ used in production.
   more expensive per image than the older experimental model. This is why the prompt
   includes explicit instructions against smoothing and altering the face.
 
-### Gemini 2.0 Flash (experimental image generation) — comparison baseline
+### Gemini 2.5 Pro — comparison baseline
 
-`gemini-2.0-flash-exp-image-generation` is an earlier, experimental native image
-generation model.
+`gemini-2.5-pro` is Google's high-end reasoning and multimodal model. It is excellent at
+understanding complex instructions, but it is a **general-purpose** model rather than one
+purpose-built for image generation and editing. It was tested as the comparison baseline
+for this task.
 
-- **Identity preservation:** noticeably weaker — more likely to drift the face, alter
-  features, or change skin tone when re-dressing the subject.
-- **Photorealism:** lower and less consistent fidelity than nano banana; results feel more
-  "generated."
-- **Use:** useful as a cheaper baseline for comparison, but **not recommended** for
-  identity-critical headshots in production.
+- **Identity preservation:** less consistent for the "keep the exact person, change the
+  outfit" edit than the dedicated Flash Image model. As a general-purpose model it does not
+  hold the subject's face as reliably across generations.
+- **Photorealism:** capable, but not specialised for high-fidelity portrait image output the
+  way Flash Image is.
+- **Cost & speed:** heavier, slower, and more expensive per image — a poor fit for a feature
+  that generates several headshots per request.
+- **Use:** a reasonable point of comparison, but **not the right tool** for identity-critical
+  headshot generation at scale.
 
 ### Summary
 
-| Model | Identity preservation | Photorealism | Recommended for production |
-|---|---|---|---|
-| Gemini 2.5 Flash Image (nano banana) | Strong | High | **Yes** |
-| Gemini 2.0 Flash (exp. image gen) | Weaker | Moderate | No — baseline only |
+| Model | Built for image generation | Identity preservation | Speed / cost | Recommended for this task |
+|---|---|---|---|---|
+| Gemini 2.5 Flash Image (nano banana) | Yes — purpose-built | Strong | Fast / lower cost | **Yes** |
+| Gemini 2.5 Pro | No — general-purpose | Less consistent | Slower / higher cost | No — baseline only |
 
-**Takeaway:** the choice of image model matters as much as the prompt. Gemini 2.5 Flash
-Image (nano banana) is the right production choice because identity preservation is the
-product's primary requirement, and it is clearly the better model on that dimension.
+### Decision: why Gemini 2.5 Flash Image is the best fit
+
+After testing both, **Gemini 2.5 Flash Image (nano banana) is the best selection for this
+task**, for three reasons:
+
+1. **It is purpose-built for image generation and editing.** This task is fundamentally an
+   image edit — "keep this exact person, change their clothing and background." Flash Image
+   is designed for exactly that, whereas Gemini 2.5 Pro is a general reasoning model whose
+   image output is a secondary capability.
+2. **It preserves identity more reliably.** Identity preservation is the product's single
+   most important requirement, and Flash Image holds the subject's face, skin tone, and
+   features more consistently across generations than 2.5 Pro.
+3. **It is faster and cheaper at scale.** Each request produces several headshots, so a
+   lighter, lower-cost-per-image model that doesn't sacrifice quality is the correct
+   production choice. 2.5 Pro is heavier and more expensive without a quality advantage on
+   this task.
+
+**Takeaway:** the choice of image model matters as much as the prompt. For identity-critical,
+high-volume headshot generation, the specialised Gemini 2.5 Flash Image model is the right
+production choice over the general-purpose Gemini 2.5 Pro.
 
 ---
 

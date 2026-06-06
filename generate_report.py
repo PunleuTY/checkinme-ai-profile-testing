@@ -507,7 +507,7 @@ def build_model_performance(story, styles):
         "are complete; the descriptions below reflect how each model behaves on the headshot "
         "task.", styles)
 
-    h2(story, "Gemini 2.5 Flash Image — &quot;nano banana&quot; (production)", styles)
+    h2(story, "Gemini 2.5 Flash Image — &quot;nano banana&quot;", styles)
     body(story,
         "This is Google's current image generation and editing model, nicknamed "
         "<b>&quot;nano banana&quot;</b> — it is the same model as "
@@ -526,34 +526,59 @@ def build_model_performance(story, styles):
         "is why the prompt includes explicit instructions against smoothing and altering the face.",
     ], styles)
 
-    h2(story, "Gemini 2.0 Flash (experimental image generation) — comparison baseline", styles)
+    h2(story, "Gemini 2.5 Pro — comparison baseline", styles)
     body(story,
-        "<font name='Courier'>gemini-2.0-flash-exp-image-generation</font> is an earlier, "
-        "experimental native image generation model.", styles)
+        "<font name='Courier'>gemini-2.5-pro</font> is Google's high-end reasoning and "
+        "multimodal model. It is excellent at understanding complex instructions, but it is a "
+        "<b>general-purpose</b> model rather than one purpose-built for image generation and "
+        "editing. It was tested as the comparison baseline for this task.", styles)
     bullet(story, [
-        "<b>Identity preservation:</b> noticeably weaker — more likely to drift the face, "
-        "alter features, or change skin tone when re-dressing the subject.",
-        "<b>Photorealism:</b> lower and less consistent fidelity than nano banana; results "
-        "feel more &quot;generated.&quot;",
-        "<b>Use:</b> useful as a cheaper baseline for comparison, but <b>not recommended</b> "
-        "for identity-critical headshots in production.",
+        "<b>Identity preservation:</b> less consistent for the &quot;keep the exact person, "
+        "change the outfit&quot; edit than the dedicated Flash Image model. As a "
+        "general-purpose model it does not hold the subject's face as reliably across "
+        "generations.",
+        "<b>Photorealism:</b> capable, but not specialised for high-fidelity portrait image "
+        "output the way Flash Image is.",
+        "<b>Cost &amp; speed:</b> heavier, slower, and more expensive per image — a poor fit "
+        "for a feature that generates several headshots per request.",
+        "<b>Use:</b> a reasonable point of comparison, but <b>not the right tool</b> for "
+        "identity-critical headshot generation at scale.",
     ], styles)
 
     h2(story, "Summary", styles)
     metric_table(story,
-        ["Model", "Identity Preservation", "Photorealism", "Production?"],
+        ["Model", "Built for Image Gen", "Identity", "Speed / Cost", "Best for Task?"],
         [
-            ["Gemini 2.5 Flash Image (nano banana)", "Strong", "High", "Yes"],
-            ["Gemini 2.0 Flash (exp. image gen)",    "Weaker", "Moderate", "No — baseline only"],
+            ["Gemini 2.5 Flash Image (nano banana)", "Yes — purpose-built",
+             "Strong", "Fast / lower cost", "Yes"],
+            ["Gemini 2.5 Pro", "No — general-purpose",
+             "Less consistent", "Slower / higher cost", "No — baseline only"],
         ],
         styles,
-        col_widths=[6.5*cm, 4*cm, 3*cm, 4*cm],
+        col_widths=[5*cm, 3.6*cm, 2.8*cm, 3*cm, 3.1*cm],
     )
+
+    h2(story, "Decision: why Gemini 2.5 Flash Image is the best fit", styles)
+    body(story,
+        "After testing both, <b>Gemini 2.5 Flash Image (nano banana) is the best selection for "
+        "this task</b>, for three reasons:", styles)
+    bullet(story, [
+        "<b>It is purpose-built for image generation and editing.</b> This task is "
+        "fundamentally an image edit — &quot;keep this exact person, change their clothing and "
+        "background.&quot; Flash Image is designed for exactly that, whereas Gemini 2.5 Pro is "
+        "a general reasoning model whose image output is a secondary capability.",
+        "<b>It preserves identity more reliably.</b> Identity preservation is the product's "
+        "single most important requirement, and Flash Image holds the subject's face, skin "
+        "tone, and features more consistently across generations than 2.5 Pro.",
+        "<b>It is faster and cheaper at scale.</b> Each request produces several headshots, so "
+        "a lighter, lower-cost-per-image model that doesn't sacrifice quality is the correct "
+        "production choice. 2.5 Pro is heavier and more expensive without a quality advantage "
+        "on this task.",
+    ], styles)
     callout_box(story,
-        "<b>Takeaway:</b> the choice of image model matters as much as the prompt. Gemini 2.5 "
-        "Flash Image (nano banana) is the right production choice because identity preservation "
-        "is the product's primary requirement, and it is clearly the better model on that "
-        "dimension.",
+        "<b>Takeaway:</b> the choice of image model matters as much as the prompt. For "
+        "identity-critical, high-volume headshot generation, the specialised Gemini 2.5 Flash "
+        "Image model is the right production choice over the general-purpose Gemini 2.5 Pro.",
         styles, colour=LIGHTGREY, border=GREEN)
 
 
