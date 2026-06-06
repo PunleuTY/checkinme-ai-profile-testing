@@ -587,13 +587,13 @@ def build_model_performance(story, styles):
 # ---------------------------------------------------------------------------
 
 def build_prompt_comparison(story, styles):
-    h1(story, "6. Prompt Comparison — Original vs Latest", styles)
+    h1(story, "6. Prompt Comparison — Production vs Experimental", styles)
 
     body(story,
         "The production prompt was rewritten. Below is the before/after. Full text of both "
         "prompts is in the Appendix.", styles)
 
-    h2(story, "The original prompt (before)", styles)
+    h2(story, "The original or production prompt (BEFORE)", styles)
     body(story,
         "A short, single-paragraph instruction. It worked, but it had three weaknesses:", styles)
     bullet(story, [
@@ -607,7 +607,7 @@ def build_prompt_comparison(story, styles):
         "ask for the backdrop to stay clean all the way to the edges of the frame.",
     ], styles)
 
-    h2(story, "The latest prompt (after)", styles)
+    h2(story, "The latest or experimental prompt (AFTER)", styles)
     body(story,
         "A structured brief organised into labelled sections, ending with an explicit list of "
         "prohibitions. It fixes all three weaknesses above and adds clearer lighting and "
