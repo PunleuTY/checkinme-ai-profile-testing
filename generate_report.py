@@ -304,7 +304,7 @@ def build_cover(story, styles):
         "corporate headshots using Google Gemini image generation. This report covers the "
         "evaluation methodology, how generation is implemented with Gemini, how the available "
         "image models perform, and a before/after comparison of the original and the latest "
-        "production prompt.",
+        "production & experimental prompt.",
         styles)
 
     story.append(PageBreak())
@@ -354,11 +354,6 @@ def build_overview(story, styles):
         "<b>A before/after comparison</b> of the original production prompt against the "
         "current (latest) prompt now used in production.",
     ], styles)
-
-    body(story,
-        "Earlier drafts of this report experimented with several throwaway prompt variants. "
-        "Those are no longer relevant and have been removed. What remains is the original "
-        "prompt and the latest prompt that replaced it.", styles)
 
 
 # ---------------------------------------------------------------------------
