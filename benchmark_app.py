@@ -217,6 +217,18 @@ def build_experimental_prompt(
         f"lines. Final look polished agency headshot. Neutral background, balanced lighting, "
         f"symmetrical framing, professional studio finish."
     )
+    if is_female:
+        prompt += (
+            " HAIR (strict): keep the EXACT same hair length and keep it worn the same way as the "
+            "original — loose or tied up, with the same ponytail, bun, or updo if present, the same "
+            "fringe/bangs, the same parting side, and the same way it falls over the shoulders. Do "
+            "not lengthen, shorten, add volume, curl, straighten, or restyle it; only clean and "
+            "groom it into a professional version of that same style. "
+            "ATTIRE (strict): reproduce the requested outfit and accessories EXACTLY — the same "
+            "blazer, the same top/blouse, and only the necklace, earrings, or scarf that are named — "
+            "with nothing added, removed, or substituted, and no extra jewelry, patterns, or buttons."
+        )
+    return prompt
 
 
 # ---------------------------------------------------------------------------
