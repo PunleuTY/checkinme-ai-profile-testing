@@ -171,7 +171,8 @@ def build_experimental_prompt(
     """Agency-studio headshot brief. Casting-agency / magazine realism (natural pores, beauty
     lighting, 85mm look) with the original face/hairstyle preserved and the clothing replaced
     with professional attire."""
-    return (
+    is_female = gender == "female"
+    prompt = (
         f"PROFESSIONAL PORTRAIT\n\n"
         f"Image edit directive, convert the subject from the input photo into a clean professional "
         f"studio headshot while preserving the exact face and hairstyle from the original image. "
