@@ -118,51 +118,24 @@ BACKGROUND_OPTIONS = {
 
 
 def build_production_prompt(gender: str, outfit_style: str) -> str:
-    is_female = gender == "female"
-    common_intro = f"Generate a portrait of a professional {'female' if is_female else 'male'} "
+    common_intro = f"Generate a portrait of a professional {'male' if gender == 'male' else 'female'} "
     common_features = (
         " STRICTLY PRESERVE the subject's original face. The output must look exactly like the person"
         " in the uploaded image. Do not alter facial structure, skin texture, or expression."
         " The body should be centered with a natural, professional pose."
         " Background must be a soft, solid, professional ID card style background."
     )
-    hair_fix = (
-        " PRESERVE the subject's original hairstyle — keep the same length, cut, parting, hairline,"
-        " and natural hair color. If the hair in the uploaded photo looks raw, messy, or unkempt,"
-        " neatly groom it into the closest PROFESSIONAL version of that same hairstyle: tame flyaways,"
-        " smooth frizz and stray strands, and tidy the edges, WITHOUT changing the overall style,"
-        " length, or color. The hair must always end up looking clean, groomed, and professional. "
-    )
-    if is_female:
-        hair_fix += (
-            " Be especially strict with the hair: keep the EXACT same hair length and keep it worn"
-            " the same way as the original — loose or tied up, and the same ponytail, bun, or updo if"
-            " present. Keep the same fringe/bangs, the same parting side, and the same way the hair"
-            " falls over the shoulders. Do NOT lengthen, shorten, add volume, curl, straighten, or"
-            " otherwise restyle it. "
-        )
     neck_fix = (
         " Ensure the neck and shoulders are anatomically correct and proportional."
         " The clothing must fit naturally around the neck/collar area without floating or weird cuts. "
     )
     framing_fix = " Frame the image from the top of the head to the mid-chest. "
-    outfit_fix = (
-        " The attire must look fully professional and formal — well-fitted, clean, and wrinkle-free"
-        " business clothing appropriate for a corporate ID / headshot. No casual, novelty, or"
-        " non-professional clothing. "
-    )
-    if is_female:
-        outfit_fix += (
-            " Reproduce the specified attire and accessories EXACTLY as described — the same blazer,"
-            " the same top/blouse, and only the necklace, earrings, or scarf that are named — with"
-            " nothing added, removed, or substituted, and no extra jewelry, patterns, or buttons. "
-        )
     image_quality = (
         " PHOTOREALISTIC style. The image must look like a high-end photograph."
         " No cartoonish, 3D render, or filtered looks."
         " Lighting should be natural studio lighting. "
     )
-    return f"{common_intro} {outfit_style}.{common_features}{hair_fix}{framing_fix}{outfit_fix}{neck_fix}{image_quality}"
+    return f"{common_intro} {outfit_style}.{common_features}{framing_fix}{neck_fix}{image_quality}"
 
 
 def build_experimental_prompt(
