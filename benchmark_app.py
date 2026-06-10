@@ -125,17 +125,29 @@ def build_production_prompt(gender: str, outfit_style: str) -> str:
         " The body should be centered with a natural, professional pose."
         " Background must be a soft, solid, professional ID card style background."
     )
+    hair_fix = (
+        " PRESERVE the subject's original hairstyle — keep the same length, cut, parting, hairline,"
+        " and natural hair color. If the hair in the uploaded photo looks raw, messy, or unkempt,"
+        " neatly groom it into the closest PROFESSIONAL version of that same hairstyle: tame flyaways,"
+        " smooth frizz and stray strands, and tidy the edges, WITHOUT changing the overall style,"
+        " length, or color. The hair must always end up looking clean, groomed, and professional. "
+    )
     neck_fix = (
         " Ensure the neck and shoulders are anatomically correct and proportional."
         " The clothing must fit naturally around the neck/collar area without floating or weird cuts. "
     )
     framing_fix = " Frame the image from the top of the head to the mid-chest. "
+    outfit_fix = (
+        " The attire must look fully professional and formal — well-fitted, clean, and wrinkle-free"
+        " business clothing appropriate for a corporate ID / headshot. No casual, novelty, or"
+        " non-professional clothing. "
+    )
     image_quality = (
         " PHOTOREALISTIC style. The image must look like a high-end photograph."
         " No cartoonish, 3D render, or filtered looks."
         " Lighting should be natural studio lighting. "
     )
-    return f"{common_intro} {outfit_style}.{common_features}{framing_fix}{neck_fix}{image_quality}"
+    return f"{common_intro} {outfit_style}.{common_features}{hair_fix}{framing_fix}{outfit_fix}{neck_fix}{image_quality}"
 
 
 def build_experimental_prompt(
@@ -148,11 +160,17 @@ def build_experimental_prompt(
         f"PROFESSIONAL PORTRAIT\n\n"
         f"Image edit directive, convert the subject from the input photo into a clean professional "
         f"studio headshot while preserving the exact face and hairstyle from the original image. "
-        f"Keep the SAME hairstyle exactly — identical length, cut, parting, hairline, and overall "
-        f"shape — but present a cleaner, neater version of it: tame flyaways and frizz, smooth stray "
-        f"strands, and tidy the edges, without changing or restyling the hair in any way. "
-        f"Replace the clothing with professional business attire. Dress the subject in "
-        f"{outfit_style}. Remove any non-professional items the person is wearing in the original "
+        f"Keep the SAME hairstyle — identical length, cut, parting, hairline, natural hair color, and "
+        f"overall shape — but always present a clean, groomed, professional version of it: tame "
+        f"flyaways and frizz, smooth stray strands, and tidy the edges. If the hair in the original "
+        f"photo looks raw, messy, or unkempt, neatly restyle it into the CLOSEST professional version "
+        f"of that same hairstyle (same length, cut, and color) so it reads as polished and "
+        f"office-appropriate, without switching to a different hairstyle. The hair must end up looking "
+        f"professional in every case. "
+        f"Replace the clothing with professional, formal business attire. Dress the subject in "
+        f"{outfit_style}. The clothing must look fully professional — well-fitted, clean, and "
+        f"wrinkle-free, with no casual or non-professional elements. Remove any non-professional items "
+        f"the person is wearing in the original "
         f"photo — earphones, earbuds, headphones, hats, caps, sunglasses, lanyards, casual or "
         f"novelty jewelry, and similar accessories must NOT appear in the output. Only keep "
         f"prescription eyeglasses if the subject is wearing them. Studio portrait look. Tight head "
