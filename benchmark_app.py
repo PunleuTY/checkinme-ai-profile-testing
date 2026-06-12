@@ -155,7 +155,7 @@ def build_experimental_prompt(
         f"face shape and proportions (jawline, cheekbones, chin, forehead, face width and length), the "
         f"same eyes, eyebrows, nose, lips, and the same natural skin texture, freckles, and moles. Do "
         f"NOT beautify, slim, reshape, or alter the face in any way, and do not change the skin color "
-        f"to match the new clothing — the person must remain instantly recognizable as the same "
+        f"to match the new clothing. The person must remain instantly recognizable as the same "
         f"individual. "
         f"Keep the SAME hairstyle — identical length, cut, parting, hairline, natural hair color, and "
         f"overall shape — but always present a clean, groomed, professional version of it: tame "
