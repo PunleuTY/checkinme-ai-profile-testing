@@ -119,7 +119,7 @@ BACKGROUND_OPTIONS = {
 
 def build_production_prompt(gender: str, outfit_style: str) -> str:
     common_intro = f"Generate a portrait of a professional {'male' if gender == 'male' else 'female'} "
-    common_features = (
+    common_features = ( 
         " STRICTLY PRESERVE the subject's original face. The output must look exactly like the person"
         " in the uploaded image. Do not alter facial structure, skin texture, or expression."
         " The body should be centered with a natural, professional pose."
@@ -149,6 +149,14 @@ def build_experimental_prompt(
         f"PROFESSIONAL PORTRAIT\n\n"
         f"Image edit directive, convert the subject from the input photo into a clean professional "
         f"studio headshot while preserving the exact face and hairstyle from the original image. "
+        f"IDENTITY LOCK (highest priority): this is a clothing-only edit — change ONLY the clothing. "
+        f"Keep the subject's face 100% identical to the original photo: the exact same skin tone and "
+        f"complexion (do not lighten, darken, warm, cool, or smooth the skin color), the exact same "
+        f"face shape and proportions (jawline, cheekbones, chin, forehead, face width and length), the "
+        f"same eyes, eyebrows, nose, lips, and the same natural skin texture, freckles, and moles. Do "
+        f"NOT beautify, slim, reshape, or alter the face in any way, and do not change the skin color "
+        f"to match the new clothing — the person must remain instantly recognizable as the same "
+        f"individual. "
         f"Keep the SAME hairstyle — identical length, cut, parting, hairline, natural hair color, and "
         f"overall shape — but always present a clean, groomed, professional version of it: tame "
         f"flyaways and frizz, smooth stray strands, and tidy the edges. If the hair in the original "
@@ -206,7 +214,15 @@ def build_experimental_prompt(
             "groom it into a professional version of that same style. "
             "ATTIRE (strict): reproduce the requested outfit and accessories EXACTLY — the same "
             "blazer, the same top/blouse, and only the necklace, earrings, or scarf that are named — "
-            "with nothing added, removed, or substituted, and no extra jewelry, patterns, or buttons."
+            "with nothing added, removed, or substituted, and no extra jewelry, patterns, or buttons. "
+            "The blazer must be a tailored, structured women's blazer with clean notched lapels, "
+            "worn open over the blouse and sitting squarely on both shoulders — not oversized, not "
+            "draped, and not slipping off. The blouse underneath must read as a crisp, smooth, "
+            "well-pressed blouse with a neat, modest, closed neckline that sits naturally against "
+            "the collarbone — conservative coverage, no plunging or low-cut neckline, no exposed "
+            "chest, and no visible undergarments. Keep the fabric matte and wrinkle-free with the "
+            "blazer collar and blouse neckline layered cleanly against each other, fully "
+            "office-appropriate and corporate-professional."
         )
     return prompt
 
@@ -595,16 +611,21 @@ def main():
             }
         else:
             outfit_sets = {
-                "Black Blazer · White Blouse":
-                    "wearing a tailored black blazer over a crisp white blouse",
-                "Navy Blazer · White Blouse":
-                    "wearing a navy blue blazer over a clean white blouse",
-                "Charcoal Blazer · Light Blue Blouse":
-                    "wearing a charcoal grey blazer over a light blue blouse",
-                "Dark Grey Blazer · White Blouse":
-                    "wearing a dark grey blazer over a white blouse",
-                "Navy Blazer · White Top · Pearl Studs":
-                    "wearing a navy blue blazer over a white top with small pearl stud earrings",
+                "Black Blazer · White Collared Shirt":
+                    "wearing a tailored black blazer over a crisp white collared button-up dress shirt, "
+                    "the shirt collar visible and worn neatly over the blazer lapels",
+                "Navy Blazer · White Collared Shirt":
+                    "wearing a navy blue blazer over a clean white collared button-up dress shirt, "
+                    "the shirt collar visible and worn neatly over the blazer lapels",
+                "Charcoal Blazer · Light Blue Collared Shirt":
+                    "wearing a charcoal grey blazer over a light blue collared button-up dress shirt, "
+                    "the shirt collar visible and worn neatly over the blazer lapels",
+                "Dark Grey Blazer · White Collared Shirt":
+                    "wearing a dark grey blazer over a white collared button-up dress shirt, "
+                    "the shirt collar visible and worn neatly over the blazer lapels",
+                "Navy Blazer · White Collared Shirt · Pearl Studs":
+                    "wearing a navy blue blazer over a white collared button-up dress shirt with small "
+                    "pearl stud earrings, the shirt collar visible and worn neatly over the blazer lapels",
             }
 
         outfit_choice = st.selectbox("Outfit Set", list(outfit_sets.keys()))
