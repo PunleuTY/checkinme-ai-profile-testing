@@ -149,7 +149,7 @@ def build_experimental_prompt(
         f"PROFESSIONAL PORTRAIT\n\n"
         f"Image edit directive, convert the subject from the input photo into a clean professional "
         f"studio headshot while preserving the exact face and hairstyle from the original image. "
-        f"IDENTITY LOCK (highest priority): this is a clothing-only edit — change ONLY the clothing. "
+        f"IDENTITY LOCK (highest priority): this is a clothing-only edit. Change ONLY the clothing. "
         f"Keep the subject's face 100% identical to the original photo: the exact same skin tone and "
         f"complexion (do not lighten, darken, warm, cool, or smooth the skin color), the exact same "
         f"face shape and proportions (jawline, cheekbones, chin, forehead, face width and length), the "
